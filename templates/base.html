@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="pl" data-theme="light">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}🛡️ Panel Moderatora{% endblock %}</title>
+  
+  <!-- CSS: light/dark using CSS variables -->
+  <style>
+    :root {
+      --bg: #f7f7fb;
+      --panel: #ffffff;
+      --text: #0f172a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --accent-contrast: #ffffff;
+      --warning: #f59e0b;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --link: #0ea5e9;
+      --shadow: 0 6px 24px rgba(0,0,0,0.08);
+    }
+    [data-theme="dark"] {
+      --bg: #0b1220;
+      --panel: #0f172a;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --border: #1f2937;
+      --accent: #60a5fa;
+      --accent-contrast: #0b1220;
+      --warning: #fbbf24;
+      --success: #34d399;
+      --danger: #f87171;
+      --link: #38bdf8;
+      --shadow: 0 6px 24px rgba(0,0,0,0.35);
+    }
+
+    /* Reset-ish */
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, "Helvetica Neue", Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: var(--bg); color: var(--text);
+    }
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Layout */
+    .app {
+      display: grid; grid-template-columns: 260px 1fr; grid-template-rows: 64px 1fr 56px; min-height: 100vh;
+      grid-template-areas:
+        "side header"
+        "side main"
+        "side footer";
+    }
+    .sidebar { grid-area: side; background: var(--panel); border-right: 1px solid var(--border); box-shadow: var(--shadow); position: sticky; top: 0; height: 100vh; }
+    .header { grid-area: header; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: var(--panel); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
+    .main   { grid-area: main; padding: 16px; }
+    .footer { grid-area: footer; background: var(--panel); border-top: 1px solid var(--border); display: flex; align-items: center; gap: 16px; padding: 0 16px; }
+
+    .brand { display:flex; align-items:center; gap:10px; font-weight: 700; padding: 16px; border-bottom: 1px solid var(--border); }
+    .brand .logo { width: 28px; height: 28px; display:grid; place-items:center; border-radius: 8px; background: var(--accent); color: var(--accent-contrast); box-shadow: var(--shadow); }
+
+    /* Nav */
+    .nav { padding: 8px; }
+    .nav a { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius: 10px; color: var(--text); border: 1px solid transparent; }
+    .nav a:hover { background: color-mix(in oklab, var(--panel), var(--accent) 15%); border-color: var(--border); text-decoration: none; }
+    .nav a.active { background: color-mix(in oklab, var(--panel), var(--accent) 25%); border-color: var(--accent); }
+
+    /* Header bits */
+    .path { font-weight: 600; }
+    .controls { display:flex; align-items:center; gap: 8px; }
+    .theme-toggle { display:inline-flex; align-items:center; gap:8px; padding:8px 10px; border-radius: 10px; border:1px solid var(--border); background: var(--panel); cursor:pointer; }
+
+    /* Panels */
+    .panel { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+    .stack { display: grid; gap: 14px; }
+
+    /* Messages */
+    .messages { display:grid; gap:8px; }
+    .msg { padding: 10px 12px; border-radius: 10px; border:1px solid var(--border); display:flex; gap:8px; align-items:center; }
+    .msg.success { border-color: color-mix(in oklab, var(--success), black 20%); }
+    .msg.warn    { border-color: color-mix(in oklab, var(--warning), black 20%); }
+    .msg.error   { border-color: color-mix(in oklab, var(--danger), black 20%); }
+
+    /* Filters */
+    .filters .grid { display:grid; gap:10px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    .field { display:grid; gap:6px; }
+    label { font-size: 12px; color: var(--muted); }
+    input[type="text"], input[type="date"], select {
+      padding:10px; border-radius:10px; border:1px solid var(--border); background: var(--bg); color: var(--text);
+    }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; }
+    thead th { text-align: left; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--border); padding: 10px; }
+    tbody td { padding: 12px 10px; border-bottom: 1px solid var(--border); }
+    tbody tr:hover { background: color-mix(in oklab, var(--panel), var(--accent) 12%); }
+
+    /* Buttons */
+    .btn-row { display:flex; gap:10px; flex-wrap: wrap; }
+    .btn { padding:10px 14px; border-radius: 10px; border:1px solid var(--border); background: var(--panel); cursor: pointer; }
+    .btn.primary { background: var(--accent); color: var(--accent-contrast); border-color: var(--accent); }
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .btn.progress { position: relative; padding-left: 36px; }
+    .btn.progress::before { content: "⏳"; position:absolute; left: 12px; top: 8px; animation: spin 1.2s linear infinite; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+    /* Utilities */
+    .spacer { height: 8px; }
+    .muted { color: var(--muted); }
+
+    /* Responsive: optionally hide sidebar on login or narrow layouts */
+    {% if hide_sidebar %}
+    .app { grid-template-columns: 1fr; grid-template-areas: "header" "main" "footer"; }
+    .sidebar { display:none; }
+    {% endif %}
+  </style>
+  {% block head_extra %}{% endblock %}
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">🧭</div>
+        <div>Moderator <span class="muted">/ {{ session.get('user')[0]|upper }}{{ session.get('user')[1:] }}</span></div>
+      </div>
+      {% include 'menu.html' %}
+    </aside>
+
+    <header class="header">
+      <div class="path">{% block header_title %}📁 {{ current_path or 'Katalog główny' }}{% endblock %}</div>
+      <div class="controls">
+        <button id="themeToggle" class="theme-toggle" title="Przełącz motyw">
+          <span id="themeIcon">☀️</span> <span class="muted">Motyw</span>
+        </button>
+      </div>
+    </header>
+
+    <main class="main">
+      {% block content %}
+      <div class="panel">Ten szablon nie został jeszcze nadpisany. ✨</div>
+      {% endblock %}
+    </main>
+
+    <footer class="footer">
+      {% include 'footer.html' %}
+    </footer>
+  </div>
+
+  <script>
+    // Theme toggle with localStorage 🎛️
+    (function(){
+      const root = document.documentElement;
+      const saved = localStorage.getItem('theme');
+      if (saved) root.setAttribute('data-theme', saved);
+      const icon = document.getElementById('themeIcon');
+      const applyIcon = () => icon.textContent = (root.getAttribute('data-theme') === 'dark') ? '🌙' : '☀️';
+      applyIcon();
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        localStorage.setItem('theme', next);
+        applyIcon();
+      });
+    })();
+  </script>
+
+  {% block body_extra %}{% endblock %}
+</body>
+</html>

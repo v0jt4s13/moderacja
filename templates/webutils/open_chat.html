@@ -1,0 +1,264 @@
+{% extends "base.html" %}
+    
+{% block title %}Manual{% endblock %}
+
+{% block extra_styles %}
+
+  <style>
+    /* body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      padding: 20px;
+      max-width: 800px;
+      margin: auto;
+    } */
+    .rozwin {
+      cursor: pointer;
+      /* background-color: #f0f0f0; */
+      padding: 10px;
+      margin-top: 20px;
+      border-left: 5px solid #007bff;
+    }
+    .hidden {
+      display: none;
+      padding: 10px;
+      /* background-color: #fafafa; */
+      border: 1px solid #ccc;
+      margin-top: 5px;
+    }
+    .pre-code pre {
+        background-color: #eeeeee24;
+        padding: 10px;
+        overflow-x: auto;
+        margin-left: 1em;
+    }
+    .pre-code {
+        text-indent: 0.1em;
+    }
+    img {
+      max-width: 100%;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+    }
+    p {
+       line-height: 1.6; 
+       text-indent: 1em;
+    }
+    ol {
+      list-style: decimal;
+      display: list-item;
+      padding-inline-start: 0px;
+    }
+    ol li {
+      list-style: decimal;
+      display: list-item;
+      padding-inline-start: 0px;
+    }
+    ul {
+      list-style: none;
+      padding-inline-start: 0.4em;
+      display: flex;
+      flex-direction: column;
+    }
+    ul li {
+      list-style: disc;
+      display: list-item;
+    }
+    .code-text {
+      font-family:;
+      line-height: normal;
+      background:rgba(135,131,120,.15);
+      color:#EB5757;
+      border-radius:4px;
+      font-size:85%;
+      padding:0.2em 0.4em;
+      position:relative;
+      bottom:0.065em;
+    }
+  </style>
+
+{% endblock %}
+
+{% block header %}Manual{% endblock %}
+
+{% block content %}
+
+  <h1>Docker, Ollama, OpenWebUI - Instalacja i konfiguracja</h1>
+
+  <h2>1. Docker</h2>
+  <p>Docker to krytyczny element naszej architektury. Dlaczego? Dzięki Dockerowi uruchomimy kontenery wewnątrz których będzie działać infrastruktura związana z chatem.</p>
+  <p>Poniżej znajdziesz info dotyczące instalacji na różnych systemach operacyjnych.</p>
+
+  <div class="rozwin">### Korzystasz z Windows?</div>
+  <div class="hidden">
+    <p><strong>1. Virtual Machine Platform (WSL2)</strong></p>
+    <p>Pierwszą rzeczą, którą trzeba zrobić, jest włączenie funkcji Windows o nazwie Platforma maszyny wirtualnej (Virtual Machine Platform). Instaluje ona tak zwany WSL2, czyli Windows Subsystem for Linux 2, który działa z systemem Windows 11 oraz Windows 10 w wersji 1903 build 18362 lub nowszej.</p>
+    <p>Aby zainstalować WSL2, naciśnij przycisk Windows lub Start i wpisz "Funkcje Systemu Windows" (Windows Features). Następnie przewiń w dół, aż zobaczysz "Platforma Maszyny Wirtualnej" (Virtual Machine Platform). Zaznacz to pole i kliknij OK. Spowoduje to zastosowanie tej funkcji w systemie Windows, a następnie pojawi się prośba o ponowne uruchomienie komputera.</p>
+    <img src="/static/webutils/img/vmp_wsl2.webp" alt="Platforma Maszyny Wirtualnej">
+    <p>Po ponownym uruchomieniu komputera, przejdź do kolejnego kroku.</p>
+
+    <p><strong>2. Instalacja Dockera - Windows lub MacOS</strong></p>
+    <p>Jeśli korzystasz z Mac lub Windows - przejdź na stronę <a href="https://docs.docker.com/get-started/get-docker/">🔗 https://docs.docker.com/get-started/get-docker/</a> i wybierz wersję dla Twojego systemu operacyjnego.</p>
+    <p>Po zakończeniu instalacji, <strong>uruchom ponownie komputer</strong> ...</p>
+  </div>
+
+  <div class="rozwin">### Korzystasz z Mac?</div>
+  <div class="hidden">
+    <p>Aby zainstalować Docker Desktop na systemie MacOS, postępuj według poniższych kroków:</p>
+    <div style="margin-left:3em">
+      <ol>
+        <li>Przejdź do oficjalnej&nbsp;<a href="https://docs.docker.com/desktop/setup/install/mac-install/"> strony Docker</a></li>
+        <li>Pobierz instalator dla Twojego procesora (Intel lub ARM64)</li>
+        <li>Otwórz .dmg i przeciągnij aplikację Docker do Aplikacji</li>
+        <li>Uruchom i dokończ konfigurację</li>
+      </ol>
+    </div>
+  </div>
+
+  <div class="rozwin">### Korzystasz z Linux?</div>
+  <div class="hidden">
+    <p>Jeśli korzystasz z Linuksa, masz dwie opcje:</p>
+    <div style="margin-left:3em">
+      <ol>
+        <li>Instalacja Dockera przez terminal:&nbsp;<a href="https://docs.docker.com/engine/install/">https://docs.docker.com/engine/install/</a></li>
+        <li>Albo Docker Desktop:&nbsp;<a href="https://docs.docker.com/get-started/get-docker/">https://docs.docker.com/get-started/get-docker/</a></li>
+      </ol>
+    </div>
+  </div>
+
+  <div>
+    <p>Aby sprawdzić, czy wszystko działa poprawnie, otwórz terminal:</p>
+    <div style="margin-left:3em">
+      <ol>
+        <li>
+          <div class="pre-code">
+            Sprawdzenie wersji dockera<br>
+            <pre><code>docker --version</code></pre>
+          </div>
+        </li><li>
+          <div class="pre-code">
+            Uruchomienie przykładowego kontenera<br>
+            <pre><code>docker run -d --name nginx nginx</code></pre>
+          </div>
+        </li><li>
+          <div class="pre-code">
+            Sprawdzenie czy dziala<br>
+            <pre><code>docker ps</code></pre>
+          </div>
+        </li><li>
+          <div class="pre-code">
+            Usunięcie konteneru z dockera<br>
+            <pre><code>docker rm nginx --force</code></pre>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </div> 
+  
+  <h2>2. Ollama</h2>
+  <p>Ollama służy do uruchamiania lokalnie modeli językowych (LLM). To daemon, który stawia lokalny backend LLM-ów i „rozmawia” po HTTP niemal 1-do-1 z tym, co zwraca endpoint. 
+    Z pomocą Ollama uruchomisz wiele otwartych modeli LLM - od Llamy 3 i Mistrala po Qwena czy Gemmę. 
+    Wszystko dzieje się lokalnie, co daje większą prywatność niż korzystanie z modeli firm trzecich. 
+    Największym plusem jest to, że uruchamiając LLM lokalnie jedyne rachunki, jakie płacisz, to prąd i trochę miejsca na dysku.
+  </p>
+
+  <h2>3. OpenWebUI</h2>
+  <p>OpenWebUI to frontend do lokalnych LLM-ów oferujący panel w przeglądarce, konta użytkowników, historię czatów i możliwość przełączania backendów. (Ollama, OpenAI, model na Hugging Face Inference)
+    A wszystko zamknięte w jednym kontenerze.
+  </p>
+  <p>
+    <h3>Instalacja Ollama i OpenWebUI</h3>
+    <div style="margin-left:3em">
+      <ol>
+        <li>
+          <div class="pre-code">
+            Stwórz katalog <span class="code-text">aichat-locally</span> i stwórz w nim plik <span class="code-text">docker-compose.yml</span> o poniższej zawartości:
+            <pre><code>
+services:
+  ollama:
+    volumes:
+      - ollama:/root/.ollama
+    container_name: ollama
+    tty: true
+    restart: unless-stopped
+    image: ollama/ollama:${OLLAMA_DOCKER_TAG-0.6.9-rc0}
+
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:${WEBUI_DOCKER_TAG-main}
+    container_name: open-webui
+    volumes:
+      - open-webui:/app/backend/data
+    depends_on:
+      - ollama
+    ports:
+      - ${OPEN_WEBUI_PORT-3000}:8080
+    environment:
+      - 'OLLAMA_BASE_URL=http://ollama:11434'
+      - 'WEBUI_SECRET_KEY='
+    # extra_hosts:
+    #  - host.docker.internal:host-gateway
+    restart: unless-stopped
+
+volumes:
+  ollama: {}
+  open-webui: {}
+            </code></pre>
+          </div>
+        </li><li>
+          <div class="pre-code">
+            Otwórz terminal i przejdź do katalogu <span class="code-text">aichat-locally</span>, a następnie użyj polecenia:
+            <pre><code>docker compose up -d</code></pre>
+          </div>
+        </li><li>
+          <div class="pre-code">
+            Po zakończeniu procesu tworzenia, przejdź do przeglądarki na <a href="http://localhost:3000/" target="_blank">http://localhost:3000/</a>
+          </div>
+        </li><li>
+          <div class="pre-code">
+            Kliknij Get Started. Załóż konto (dane będą zapisane lokalnie u Ciebie na komputerze)
+          </div>
+        </li>
+      </ol>
+    </div>
+  </p>  
+
+  <h2>4. Uruchomienie LLM lokalnie - jaki model wybrać?</h2>
+  <p>1. <a href="https://ollama.com/library" target="_blank">https://ollama.com/library</a> znajdziesz bazę dostępnych modeli do uruchomienia lokalnie z poziomu OpenWebUI.</p>
+  <p>2. <a href="https://github.com/ollama/ollama" target="_blank">https://github.com/ollama/ollama</a> więcej przykładowych modeli jakie można pobrać</p>
+  
+  <div style="margin-left:3em">
+    <p style="margin-left:-2em">Przy wybieraniu modelu, zwróć uwagę na:</p>
+    <ul>
+      <li>jego zastosowania</li>
+      <li>rozmiar na dysku (żeby nie pobierać np 800 GB)</li>
+      <li>wsparcie dla GPU / CPU</li>
+    </ul>
+  </div>
+  
+  <p>3. Aby zainstalować wybrany model, przejdź do OpenWebUI, kliknij w "Select a model", a następnie wpisz np.: <span class="code-text">gemma3</span></p>
+  <p>Gdy model zostanie pobrany możemy zacząć rozmowę z chatem.</p>
+
+  <h2>5. Podpięcie zewnętrznych API (OpenAI, Claude, Gemini etc)</h2>
+  <p>Aby podpiąć np. OpenAI API, zaloguj się do działającego OpenWebUI, kliknij ikonkę Twego avatara, następnie "Settings". 
+    Przejdź do Connections, następnie kliknij w ikonkę (+). Wprowadź API URL <span class="code-text">https://api.openai.com/v1</span> oraz API Key i zapisz.
+  </p>
+  <p>Od tej chwili na liście modeli powinieneś mieć modele z OpenAI.</p>
+
+  <h2>6. Własna Baza Wiedzy (RAG)</h2>
+  <p>RAG (Retrieval-Augmented Generation) to technika, w której model językowy najpierw wyszukuje pasujące fragmenty z bazy dokumentów, a dopiero potem generuje odpowiedź, wplatając te fragmenty jako kontekst. Dzięki temu odpowiedzi są bardziej precyzyjne i oparte na realnych danych, a nie tylko na „wiedzy” modelu.</p>
+  <p>OpenWebUI z włączonym RAG-iem to proste połączenie interfejsu www i wyszukiwania kontekstowego. Po dodaniu plików (PDF, Markdown, strony WWW) możesz zadawać pytania, a model odpowiada z uwzględnieniem treści znalezionych w tych dokumentach.</p>
+
+  <h2>7. Udostępnienie Chata z Twojego komputera do internetu po HTTPS</h2>
+
+  <script>
+    document.querySelectorAll('.rozwin').forEach(button => {
+      button.addEventListener('click', () => {
+        const next = button.nextElementSibling;
+        if (next && next.classList.contains('hidden')) {
+          next.style.display = next.style.display === 'block' ? 'none' : 'block';
+        }
+      });
+    });
+  </script>
+
+{% endblock %}

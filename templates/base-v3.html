@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Panel moderatora{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <!-- <link rel="stylesheet" href="/static/css/styles.css"> -->
+  <script>
+    (function(){
+      const saved = localStorage.getItem('theme');
+      const mode = saved ? saved
+        : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (mode === 'dark') document.documentElement.classList.add('dark-mode');
+    })();
+  </script>
+  {% block extra_meta %}{% endblock %}
+  {% block extra_styles %}{% endblock %}
+  {% block extra_js %}{% endblock %}
+</head>
+<body>
+  
+  {% include "menu.html" %}
+
+  <header>
+    <h1>{% block header %}
+      {% if session.get('role') == 'redakcja' %}
+        Panel Redaktora
+      {% else %}
+        Panel Moderatora
+      {% endif %}
+    {% endblock %}</h1>
+  </header>
+
+  <main style="padding: 2rem;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <ul class="flashes">
+        {% for category, message in messages %}
+          <li class="flash {{ category }}">{{ message }}</li>
+        {% endfor %}
+        </ul>
+      {% endif %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block scripts %}{% endblock %}
+  
+  {% include "footer.html" %}
+</body>
+</html>

@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% set active = 'dashboard' %}
+{% block title %}🛡️ Panel Moderatora — Start{% endblock %}
+{% block header_title %}📁 {{ current_path or 'Dashboard' }}{% endblock %}
+
+{% block content %}
+  <div class="stack">
+
+    <!-- Messages -->
+    <section class="panel messages" aria-live="polite">
+      <div class="msg success">✅ Sukces: Zaktualizowano 12 ogłoszeń.</div>
+      <div class="msg warn">⚠️ Ostrzeżenie: 3 ogłoszenia oczekują na weryfikację dodatkowych danych.</div>
+      <div class="msg error">❌ Błąd: Nie udało się pobrać szczegółów dla ID 4821.</div>
+    </section>
+
+    <!-- Filters -->
+    <section class="panel filters">
+      <form method="get" action="{{ url_for('index') }}">
+        <div class="grid">
+          <div class="field">
+            <label for="q">🔎 Wyszukaj</label>
+            <input type="text" id="q" name="q" placeholder="fraza, ID, email" value="{{ request.args.get('q','') }}" />
+          </div>
+          <div class="field">
+            <label for="section">📁 Sekcja</label>
+            <select id="section" name="section">
+              <option value="">(wszystkie)</option>
+              <option value="accommodation">Nieruchomości</option>
+              <option value="jobs">Praca</option>
+              <option value="services">Usługi</option>
+              <option value="market">Kup/Sprzedaj</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="from">📅 Od</label>
+            <input type="date" id="from" name="from" />
+          </div>
+          <div class="field">
+            <label for="to">📅 Do</label>
+            <input type="date" id="to" name="to" />
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn-row">
+          <button class="btn primary" type="submit">🔍 Filtruj</button>
+          <a class="btn" href="{{ url_for('index') }}">🧹 Wyczyść</a>
+        </div>
+      </form>
+    </section>
+
+    <!-- Table -->
+    <section class="panel">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+        <strong>📊 Ostatnie zgłoszenia</strong>
+        <span class="muted">Łącznie: 42</span>
+      </div>
+      <div style="overflow:auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Tytuł</th>
+              <th>Sekcja</th>
+              <th>Autor</th>
+              <th>Status</th>
+              <th>Data</th>
+              <th>Akcje</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for i in range(1,8) %}
+            <tr>
+              <td>#{{ 4800 + i }}</td>
+              <td>Przykładowe ogłoszenie {{ i }} ✨</td>
+              <td>{{ ('Praca','Usługi','Nieruchomości')[(i-1) % 3] }}</td>
+              <td>user{{ i }}@example.com</td>
+              <td>{% if i % 2 == 0 %}✅ Aktywne{% else %}⏳ Oczekujące{% endif %}</td>
+              <td>2025-10-0{{ (i % 9) + 1 }}</td>
+              <td>
+                <a href="#">👁️ Podgląd</a>
+                •
+                <a href="#">✏️ Edytuj</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Form -->
+    <section class="panel">
+      <form method="post" action="" enctype="application/x-www-form-urlencoded">
+        <div class="grid">
+          <div class="field">
+            <label for="title">📝 Tytuł</label>
+            <input type="text" id="title" name="title" placeholder="Wpisz tytuł..." required />
+          </div>
+          <div class="field">
+            <label for="category">🏷️ Kategoria</label>
+            <select id="category" name="category" required>
+              <option value="">— wybierz —</option>
+              <option>Praca</option>
+              <option>Usługi</option>
+              <option>Nieruchomości</option>
+              <option>Kup/Sprzedaj</option>
+            </select>
+          </div>
+          <div class="field">
+            <label for="active">✅ Aktywny</label>
+            <select id="active" name="active">
+              <option value="1">Tak</option>
+              <option value="0">Nie</option>
+            </select>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <div class="btn-row">
+          <button class="btn primary" type="submit">💾 Zapisz</button>
+          <button class="btn" type="button" disabled>🚫 Nieaktywne</button>
+          <button class="btn progress" type="button">Przetwarzanie…</button>
+        </div>
+      </form>
+    </section>
+
+  </div>
+{% endblock %}

@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block title %}Przeglądarka logów{% endblock %}
+
+{% block header %}Przeglądarka logów{% endblock %}
+
+{% block extra_meta %}
+  <meta http-equiv="refresh" content="300">
+{% endblock %}
+
+{% block content %}
+
+  <style>
+    /* body {
+      font-family: monospace;
+      background-color: #111;
+      color: #0f0;
+      padding: 2em;
+    } */
+
+    h1 {
+      font-size: 1.5em;
+      color: #aaa;
+    }
+
+    .timestamp {
+      font-size: 1em;
+      color: #888;
+      margin-bottom: 1em;
+    }
+
+    .log-entry {
+      margin-bottom: 1.2em;
+      padding-bottom: 1em;
+      border-bottom: 1px solid #333;
+    }
+
+    .log-header {
+      font-size: 1.2em;
+      color: #39f;
+      margin-bottom: 0.3em;
+    }
+
+    .log-body {
+      font-size: 1.3em;
+      color: #0f0;
+    }
+    .log-body a {
+        color:#888;
+    }
+    .view-file-url {
+      /* background-color: #007bff; */
+      text-align: right;
+      padding: 10px;
+    }
+    .view-file-url a {
+      color:aliceblue;
+      text-decoration: auto;
+    }
+    select.files-list,
+      label.files-list {
+      font-size: xx-large;
+    }
+  </style>
+
+  log_path={{ log_path }} <hr>
+  log_dir={{ log_dir }} <hr>
+  selected_file={{ selected_file }} <hr> 
+  less {{ log_path }}<hr>
+  
+  <h1>📝 Logi debug</h1>
+  <div class="timestamp">🕒 Ostatnia aktualizacja: {{ current_time }}</div>
+  <div class="view-file-url"><a href="/webutils/viewfile?file_type={{ file_type }}&filepath={{ log_path }}" target="_blank"> 🔗 view {{ file_type }} file</a></div>
+  <form method="get">
+    <label class="files-list" for="file">📂 Wybierz plik logu ({{ len_all_files_with_mtime_by_folder }}):</label>
+    <select class="files-list" name="file" id="file" onchange="this.form.submit()">
+      {% for folder, files_mtimes in all_files_with_mtime_by_folder.items() %}
+        <optgroup label="{{ folder }}">
+            {% for filename, mtime in files_mtimes %}
+                <option value="{{ filename }}" {% if filename == selected_file %}selected{% endif %}>
+                    {{ filename }} ({{ mtime }})
+                </option>
+            {% endfor %}
+        </optgroup>
+      {% endfor %}
+    </select>
+    <noscript><input type="submit" value="Wyświetl"></noscript>
+  </form>
+
+  <h2>📄 Wyświetlam zawartość pliku: <code>{{ selected_file }}</code></h2>
+
+  {% if parsed_data: %}
+    <h3>parsed_data</h3>
+    <pre>{ parsed_data }
+      {% for item in parsed_data %}
+        {{ item }}
+      {% endfor %}
+    </pre>
+
+  {% endif %}
+
+  {% if file_content_json: %}
+    <pre>file_content_json</pre>
+    <pre>{{ file_content_json }}</pre>
+
+  {% endif %}
+  <!-- <div style="font-family: monospace; padding: 1rem; border-radius: 5px;">
+    {% for line in file_content_lines %}
+      
+      {% set parts = line.split(" | ", 2) %}
+      <div class="log-entry" style="margin-bottom: 1rem;">
+        <div class="log-header" style="font-weight: bold; color: #007bff;">
+          {{ parts[0] if parts|length > 0 else "" }} | {{ parts[1] if parts|length > 1 else "" }}
+        </div>
+        <div class="log-body">
+          {{ (parts[2] if parts|length > 2 else line) | safe }}
+        </div>
+      </div>
+    {% endfor %}
+  </div> -->
+  <div style="font-family: monospace; padding: 1rem; border-radius: 5px;">
+    {% for e in entries %}
+      <div class="log-entry" style="margin-bottom: 1rem;">
+        <div class="log-header" style="font-weight: bold; color: #007bff;">
+          {{ e.ts_str }}{% if e.scope %} | {{ e.scope }}{% endif %}{% if e.level %} | {{ e.level }}{% endif %}
+        </div>
+        <div class="log-body">
+          {% if e.body is string %}
+            <pre style="white-space: pre-wrap; margin:0;">{{ e.body }}</pre>
+          {% else %}
+            <pre style="white-space: pre-wrap; margin:0;">{{ e.body | tojson(indent=2) }}</pre>
+          {% endif %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var selectElement = document.getElementById('file');
+        if (selectElement) {
+            selectElement.focus();
+        }
+    });
+  </script>
+
+{% endblock %}

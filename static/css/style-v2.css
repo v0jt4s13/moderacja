@@ -1,0 +1,160 @@
+:root {
+    --bg-color-light: #f4f4f9;
+    --text-color-light: #333;
+    --sidebar-bg-light: #fff;
+    --header-bg-light: #e0e0e0;
+    --box-bg-light: #fff;
+    --border-color-light: #ccc;
+    --primary-color: #007bff;
+}
+
+.dark-mode {
+    --bg-color-light: #121212;
+    --text-color-light: #e0e0e0;
+    --sidebar-bg-light: #1e1e1e;
+    --header-bg-light: #2d2d2d;
+    --box-bg-light: #1e1e1e;
+    --border-color-light: #333;
+    --primary-color: #bb86fc; /* Lżejszy kolor w dark mode */
+}
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--bg-color-light);
+    color: var(--text-color-light);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+#app-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* --- Nagłówek --- */
+header {
+    background-color: var(--header-bg-light);
+    color: var(--text-color-light);
+    padding: 10px 20px;
+    border-bottom: 1px solid var(--border-color-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+/* --- Boczna Nawigacja (Menu) --- */
+nav {
+    width: 200px;
+    background-color: var(--sidebar-bg-light);
+    border-right: 1px solid var(--border-color-light);
+    padding: 20px;
+    flex-shrink: 0;
+}
+
+nav a {
+    display: block;
+    color: var(--text-color-light);
+    text-decoration: none;
+    padding: 10px 0;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+nav a:hover, .current-dir {
+    background-color: var(--header-bg-light);
+}
+
+/* --- Sekcja Główna --- */
+main {
+    flex-grow: 1;
+    padding: 20px;
+}
+
+.content-box {
+    background-color: var(--box-bg-light);
+    border: 1px solid var(--border-color-light);
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 8px;
+}
+
+/* --- Tabela --- */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+th, td {
+    border: 1px solid var(--border-color-light);
+    padding: 10px;
+    text-align: left;
+}
+
+thead {
+    background-color: var(--header-bg-light);
+}
+
+/* --- Formularz --- */
+.form-group {
+    margin-bottom: 15px;
+}
+
+input[type="text"], input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color-light);
+    background-color: var(--bg-color-light);
+    color: var(--text-color-light);
+    border-radius: 4px;
+}
+
+/* --- Przyciski --- */
+.btn {
+    padding: 10px 15px;
+    margin-right: 10px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    color: white;
+}
+
+.btn-disabled {
+    background-color: #808080;
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.btn-progress {
+    background-color: #ffc107;
+    color: #333;
+}
+
+/* --- Stopka --- */
+footer {
+    text-align: center;
+    padding: 10px;
+    background-color: var(--header-bg-light);
+    border-top: 1px solid var(--border-color-light);
+    position: sticky;
+    bottom: 0;
+    width: 100%;
+    margin-top: auto; /* Pcha stopkę na dół */
+}
+
+/* --- Przełącznik Dark/Light Mode --- */
+#theme-toggle {
+    cursor: pointer;
+    font-size: 1.5em;
+    padding: 5px;
+}
+
+/* --- Komunikaty --- */
+.message-box.info { border-left: 5px solid #007bff; background-color: var(--header-bg-light); padding: 10px; }
+.message-box.error { border-left: 5px solid #dc3545; background-color: var(--header-bg-light); padding: 10px; }

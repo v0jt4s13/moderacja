@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block current_directory %}Dashboard 📊{% endblock %}
+
+{% block content %}
+    <h2>Witaj w Panelu Zarządzania! 👋</h2>
+
+    <div class="content-box message-box info">
+        <strong>🔔 Komunikat:</strong> Pamiętaj o regularnym przeglądzie logów!
+    </div>
+
+    <div class="content-box">
+        <h3>Filtry Danych 🔎</h3>
+        <form>
+            <div class="form-group">
+                <label for="status-filter">Status:</label>
+                <select id="status-filter">
+                    <option>Aktywny</option>
+                    <option>Zawieszony</option>
+                    <option>Wszystkie</option>
+                </select>
+            </div>
+            <button class="btn btn-primary" type="submit">Filtruj</button>
+        </form>
+    </div>
+
+    <div class="content-box">
+        <h3>Ostatnie Aktywności 📝</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Użytkownik</th>
+                    <th>Akcja</th>
+                    <th>Data</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>101</td>
+                    <td>admin_x</td>
+                    <td>Edycja Ustawień</td>
+                    <td>2025-10-07 10:00</td>
+                    <td>✅ Ukończono</td>
+                </tr>
+                <tr>
+                    <td>102</td>
+                    <td>mod_jan</td>
+                    <td>Usunięcie Posta</td>
+                    <td>2025-10-07 10:15</td>
+                    <td>⚠️ Oczekuje na zatwierdzenie</td>
+                </tr>
+                <tr>
+                    <td>103</td>
+                    <td>user_33</td>
+                    <td>Logowanie</td>
+                    <td>2025-10-07 10:20</td>
+                    <td>❌ Niepowodzenie</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="content-box">
+        <h3>Zarządzanie Użytkownikiem ⚙️</h3>
+        <form>
+            <div class="form-group">
+                <label for="username">Nazwa Użytkownika:</label>
+                <input type="text" id="username" value="test_user" required>
+            </div>
+            <div class="form-group">
+                <label for="email">E-mail:</label>
+                <input type="email" id="email" value="test@example.com">
+            </div>
+
+            <button class="btn btn-primary" type="submit">Aktywny (Zapisz) ✨</button>
+            <button class="btn btn-disabled" type="button" disabled>Nieaktywny (Zablokuj) 🚫</button>
+            <button class="btn btn-progress" type="button">Progress (W trakcie) 🔄</button>
+        </form>
+    </div>
+
+{% endblock %}

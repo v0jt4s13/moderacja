@@ -1,0 +1,41 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 2rem;
+    background: #f9f9f9;
+  }
+  h1 {
+    text-align: center;
+  }
+  #form-section {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+  textarea {
+    width: 80%;
+    height: 100px;
+    font-size: 1.2rem;
+  }
+  .font-preview {
+    background: #fff;
+    margin: 1rem auto;
+    padding: 1rem;
+    font-size: 2em;
+    border-radius: 8px;
+    box-shadow: 0 0 5px rgba(0,0,0,0.1);
+    width: fit-content;
+  }
+  .font-name {
+    font-weight: bold;
+    margin-bottom: 0.5rem;
+    text-wrap-mode: nowrap;
+  }
+  .font-text {
+    white-space: pre-wrap;
+  }
+  #preview-container {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 30px;
+  }

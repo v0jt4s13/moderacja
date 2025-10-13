@@ -1,0 +1,467 @@
+{% extends "base.html" %}
+{% block title %}Provider Proxy — News → Video{% endblock %}
+{% block header %}News → Video — Provider Proxy{% endblock %}
+
+{% block content %}
+<style>
+  .card:hover { transition: none !important; transform: none !important;}
+  .wrap{ max-width:1100px; margin:30px auto; padding:0 16px; }
+  .card{ width: auto; background:#121925; border:1px solid #1e2a3b; border-radius:14px; box-shadow:0 8px 24px #0006; margin:10px 0; }
+  .card h2{ font-size:16px; margin:0; padding:12px 14px; border-bottom:1px solid #1e2a3b; color:#cfe4ff }
+  .card .body{ padding:14px; }
+  label{ display:block; font-weight:600; color:#cde; margin:12px 0 6px; }
+  input[type="text"], select, textarea{
+    width:100%; box-sizing:border-box; background:#0e1622; color:#e9f2ff; border:1px solid #243244;
+    border-radius:10px; padding:10px 12px; outline:none;
+  }
+  .btn{ background:#4aa3ff; color:#001326; border:none; padding:10px 14px; border-radius:12px; font-weight:700; cursor:pointer; }
+  .btn.secondary{ background:#203247; color:#cfe4ff; }
+  .grid{ display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+  .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:13px; }
+  .muted{ color:#9fb0c3; }
+  #loaderOverlay { position:fixed; inset:0; background:rgba(255,255,255,.9); display:none; align-items:center; justify-content:center; z-index:9999; }
+  .loader{ width:64px; height:64px; border-radius:50%; border:6px solid #ddd; border-top-color:#111; animation:spin 1s linear infinite; }
+  @keyframes spin{ to { transform: rotate(360deg); } }
+</style>
+
+<div class="wrap">
+  <div class="card">
+    <h2>Wyślij żądanie do API dostawcy</h2>
+    <label style="display:flex; align-items:center; gap:8px; margin-top:6px;">
+      <input type="checkbox" id="autoFormat" checked />
+      Autoformat JSON po wklejeniu
+    </label>
+    <div class="body">
+      <div class="grid">
+        <div>
+          <label for="render_url">render_url (adres API)</label>
+          <input id="render_url" type="text" placeholder="https://api.shotstack.io/v1/render" />
+          <div class="muted">Wybierz z listy poniżej lub wklej własny adres.</div>
+        </div>
+        <div>
+          <label for="preset_select">Szybki wybór</label>
+          <select id="preset_select">
+            <option value="">— wybierz —</option>
+            {% for p in presets %}
+              <option value="{{ p.url }}">{{ p.label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+    <div style="margin-top:10px">
+      <label for="headers">Headers (JSON)</label>
+      <textarea id="headers" rows="4" class="mono" placeholder='{"x-api-key":"...","Content-Type":"application/json"}'></textarea>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+          <button type="button" class="btn secondary" id="fmtHeadersBtn">Sformatuj headers</button>
+      </div>
+    </div>
+
+    <div style="margin-top:10px">
+      <label for="payload">Payload (JSON)</label>
+      <textarea id="payload" rows="10" class="mono" placeholder='{"timeline":{...},"output":{...}}'></textarea>
+      <div style="display:flex; gap:8px; justify-content:flex-end; margin-top:6px;">
+          <button type="button" class="btn secondary" id="fmtPayloadBtn">Sformatuj payload</button>
+      </div>
+    </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:12px;">
+        <button id="sendBtn" class="btn">Wyślij</button>
+        <button id="clearBtn" class="btn secondary">Wyczyść</button>
+      </div>
+
+      <div id="status" style="margin-top:10px" class="muted"></div>
+
+      <details style="margin-top:12px">
+        <summary>Odpowiedź dostawcy</summary>
+        <pre id="responseBox" class="mono" style="white-space:pre-wrap; background:#0b0f14; color:#e6eef7; padding:10px; border-radius:8px; max-height:420px; overflow:auto;">{ }</pre>
+      </details>
+    </div>
+  </div>
+</div>
+
+<div id="loaderOverlay" role="alert" aria-busy="true" aria-live="assertive">
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div class="loader" aria-hidden="true"></div>
+    <div id="loaderText" style="margin-top:12px;color:#111;font-weight:600;text-align:center;">Wysyłam żądanie…</div>
+  </div>
+</div>
+
+<script>
+  function $(s){
+    // jeśli to element (nodeType 1), zwróć bez zmian
+    if (s && typeof s === 'object' && s.nodeType === 1) return s;
+    // w przeciwnym razie potraktuj jako selektor
+    return document.querySelector(s);
+  }
+  // const $ = (s)=>document.querySelector(s);
+  const overlay = $('#loaderOverlay');
+  const statusEl = $('#status');
+  const box = $('#responseBox');
+
+  function parseAndFormat(text){
+    const trimmed = (text || '').trim();
+    if (!trimmed) return { ok:false, reason:'empty', formatted: text, changed:false, value: null };
+    try{
+      const value = JSON.parse(trimmed);
+      const formatted = JSON.stringify(value, null, 2);
+      return { ok:true, formatted, changed: (formatted !== text), value };
+    }catch(e){
+      return { ok:false, reason:'parse_error', formatted: text, changed:false, value: null };
+    }
+  }
+
+  function formatTextarea(selector, {expectObject=false, label='Pole'} = {}){
+    const ta = $(selector);
+    const before = ta.value;
+    const res = parseAndFormat(before);
+
+    if (!res.ok){
+      setStatus(`${label}: niepoprawny JSON (nie udało się sparsować).`, 'error');
+      return false;
+    }
+    if (expectObject && (res.value === null || Array.isArray(res.value) || typeof res.value !== 'object')){
+      setStatus(`${label}: JSON poprawny, ale oczekiwano obiektu (np. {"x-api-key":"..."}).`, 'warn');
+      // nadal podmień sformatowaną wersję
+    }
+
+    ta.value = res.formatted;
+    if (res.changed){
+      setStatus(`${label}: sformatowano.`, 'ok');
+    } else {
+      setStatus(`${label}: już poprawnie sformatowane (brak zmian).`, 'info');
+    }
+    return true;
+  }
+
+  function setStatus(msg, kind='info'){
+    const el = $('#status');
+    const colors = { ok:'#1fbf75', error:'#ff5a5a', warn:'#ffb84a', info:'#9fb0c3' };
+    el.innerHTML = `<span style="color:${colors[kind]||colors.info}">${msg}</span>`;
+  }
+
+  // Autoformat po wklejeniu (tylko jeśli JSON poprawny – nie psujemy treści)
+  function attachAutoFormatOnPaste(target, {expectObject=false, label='Pole'} = {}){
+    const ta = (typeof target === 'string') ? document.querySelector(target) : target;
+    if (!ta) return;
+
+    ta.addEventListener('paste', ()=>{
+      setTimeout(()=>{
+        const before = ta.value;
+        const res = parseAndFormat(before);
+        if (res.ok){
+          ta.value = res.formatted;
+          if (expectObject && (res.value === null || Array.isArray(res.value) || typeof res.value !== 'object')){
+            setStatus(`${label}: JSON poprawny, ale oczekiwano obiektu (np. {"x-api-key":"..."})`, 'warn');
+          } else if (res.changed){
+            setStatus(`${label}: autoformat OK.`, 'ok');
+          } else {
+            setStatus(`${label}: już poprawnie sformatowane.`, 'info');
+          }
+        }
+      }, 0);
+    });
+  }
+  // --- PODPIĘCIA ---
+  attachAutoFormatOnPaste('#headers', { expectObject:true, label:'Headers' });
+  attachAutoFormatOnPaste('#payload', { expectObject:false, label:'Payload' });
+
+  $('#fmtHeadersBtn')?.addEventListener('click', ()=> {
+    formatTextarea('#headers', { expectObject:true, label:'Headers' });
+  });
+
+  $('#fmtPayloadBtn')?.addEventListener('click', ()=> {
+    formatTextarea('#payload', { expectObject:false, label:'Payload' });
+  });
+
+  function tryFormatJSON(text){
+    if (!text || !text.trim()) return text;
+    const t = text.trim();
+
+    // 1) zwykła próba
+    try { return JSON.stringify(JSON.parse(t), null, 2); } catch(e) {}
+
+    // 2) „miękka” próba: zamień pojedyncze cudzysłowy na podwójne tylko
+    //    gdy tekst wygląda na obiekt/array i nie zawiera cudzysłowów podwójnych
+    //    (minimalizacja ryzyka popsucia prawidłowego JSON-a)
+    if ((t.startsWith("{") || t.startsWith("[")) && !t.includes('"')) {
+      const soft = t
+        // zamień '...': na "..." :
+        .replace(/'([^'\\]*?(?:\\.[^'\\]*?)*)'\s*:/g, "\"$1\":")
+        // zamień : '...' na : "..."
+        .replace(/:\s*'([^'\\]*?(?:\\.[^'\\]*?)*)'/g, ": \"$1\"");
+
+      try { return JSON.stringify(JSON.parse(soft), null, 2); } catch(e) {}
+    }
+
+    // 3) nie zmieniaj, jeśli dalej nie jest poprawne
+    return text;
+  }
+
+  function attachAutoFormatOnPaste_depr(textarea){
+    textarea.addEventListener('paste', (ev)=>{
+      const auto = $('#autoFormat') ? $('#autoFormat').checked : true;
+      if (!auto) return;
+      // Pozwól przeglądarce wkleić, a po chwili sformatuj
+      setTimeout(()=>{
+        const before = textarea.value;
+        const after = tryFormatJSON(before);
+        // Tylko jeśli JSON poprawny – podmień
+        if (after !== before){
+          textarea.value = after;
+        }
+      }, 0);
+    });
+  }
+
+  function stripInvalidTransitionDuration(payload){
+    // przejdź po tracks -> clips i usuń transition.duration
+    try{
+      (payload.timeline?.tracks || []).forEach(t=>{
+        (t.clips || []).forEach(c=>{
+          if (c.transition && 'duration' in c.transition) delete c.transition.duration;
+        });
+      });
+    }catch(e){}
+    return payload;
+  }
+
+  function validatePayloadForShotstack(p){
+    const errs = [];
+    (p.timeline?.tracks || []).forEach((t, ti)=>{
+      (t.clips || []).forEach((c, ci)=>{
+        if (c.transition && 'duration' in c.transition){
+          errs.push(`timeline.tracks[${ti}].clips[${ci}].transition.duration jest niedozwolone`);
+        }
+      });
+    });
+    return errs;
+  }
+
+  const errs = validatePayloadForShotstack(payload);
+  if (errs.length){
+    setStatus('Payload ma nieobsługiwane pola:\n' + errs.join('\n'), 'warn');
+    // możesz tu przerwać albo auto-usunąć jak wyżej
+  }
+
+  // Podpięcie autoformatu do pól
+  ['#headers', '#payload'].forEach(sel=>{
+    const ta = $(sel);
+    if (ta) attachAutoFormatOnPaste(ta);
+  });
+
+  // Ręczne formatowanie przyciskiem
+  $('#fmtHeadersBtn')?.addEventListener('click', ()=>{
+    const ta = $('#headers');
+    const before = ta.value;
+    const after = tryFormatJSON(before);
+    ta.value = after;
+    if (after === before){
+      statusEl.innerHTML = '<span style="color:#ffb84a">Headers: brak zmian (niepoprawny JSON?).</span>';
+    } else {
+      statusEl.innerHTML = '<span style="color:#1fbf75">Headers sformatowane.</span>';
+    }
+  });
+
+  $('#fmtPayloadBtn')?.addEventListener('click', ()=>{
+    const ta = $('#payload');
+    const before = ta.value;
+    const after = tryFormatJSON(before);
+    ta.value = after;
+    if (after === before){
+      statusEl.innerHTML = '<span style="color:#ffb84a">Payload: brak zmian (niepoprawny JSON?).</span>';
+    } else {
+      statusEl.innerHTML = '<span style="color:#1fbf75">Payload sformatowany.</span>';
+    }
+  });
+
+  $('#preset_select')?.addEventListener('change', (e)=>{
+    if (!e.target.value) return;
+    $('#render_url').value = e.target.value;
+  });
+
+  $('#clearBtn')?.addEventListener('click', ()=>{
+    $('#headers').value = '';
+    $('#payload').value = '';
+    box.textContent = '{ }';
+    statusEl.textContent = '';
+  });
+
+  $('#sendBtn')?.addEventListener('click', async ()=>{
+    const render_url = ($('#render_url').value || '').trim();
+    const headersRaw = ($('#headers').value || '').trim();
+    const payloadRaw = ($('#payload').value || '').trim();
+
+    if (!render_url){
+      statusEl.innerHTML = '<span style="color:#ff5a5a">Podaj render_url.</span>';
+      return;
+    }
+
+    let headers = {};
+    if (headersRaw){
+      try { headers = JSON.parse(headersRaw); }
+      catch { statusEl.innerHTML = '<span style="color:#ff5a5a">Headers nie są poprawnym JSON-em.</span>'; return; }
+    }
+
+    let payload = null;
+    if (payloadRaw){
+      try { 
+        payload = JSON.parse(payloadRaw);
+        payload = stripInvalidTransitionDuration(payload);
+      }
+      catch { statusEl.innerHTML = '<span style="color:#ff5a5a">Payload nie jest poprawnym JSON-em.</span>'; return; }
+    }
+
+    statusEl.textContent = 'Wysyłam dane do dostawcy…';
+    overlay.style.display = 'flex';
+
+    try{
+      const res = await fetch('{{ url_for("news_to_video.provider_proxy_api") }}', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json', 'Accept':'application/json'},
+        body: JSON.stringify({ render_url, method:'POST', headers, payload })
+      });
+
+      const data = await res.json();
+      overlay.style.display = 'none';
+
+      if (data.ok){
+        statusEl.innerHTML = '<span style="color:#1fbf75">Odpowiedź odebrana (status '+(data.status_code||200)+').</span>';
+      } else {
+        statusEl.innerHTML = '<span style="color:#ff5a5a">Błąd: '+(data.error||('HTTP '+(data.status_code||'')))+'</span>';
+      }
+      box.textContent = JSON.stringify(data, null, 2);
+    } catch (e){
+      overlay.style.display = 'none';
+      statusEl.innerHTML = '<span style="color:#ff5a5a">Wyjątek: '+(e.message||e)+'</span>';
+    }
+  });
+
+</script>
+
+{% endblock %}
+
+
+
+{
+  "timeline": {
+    "soundtrack": {
+      "src": "https://shotstack-ingest-api-stage-sources.s3.ap-southeast-2.amazonaws.com/d5gq6okg9c/zzz01k68-qjdbj-xgrpf-qvddq-c2j215/source.mp3",
+      "effect": "fadeInFadeOut"
+    },
+    "soundtrack": {
+      "src": "https://jdblayer-assets.s3.eu-west-2.amazonaws.com/londynek/video/projects/2025/09/proj-20250928-165652/audio/narration.mp3",
+      "effect": "fadeInFadeOut"
+    },
+    "background": "#000000",
+    "tracks": [
+      {
+        "clips": [
+          {
+            "length": "auto",
+            "asset": {
+              "type": "audio",
+              "src": "https://jdblayer-assets.s3.eu-west-2.amazonaws.com/londynek/video/projects/2025/09/proj-20250928-165652/audio/narration.mp3",
+              "volume": 1
+            },
+            "start": 0
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "length": "auto",
+            "asset": {
+              "type": "audio",
+              "src": "https://shotstack-ingest-api-stage-sources.s3.ap-southeast-2.amazonaws.com/d5gq6okg9c/zzz01k68-qjdbj-xgrpf-qvddq-c2j215/source.mp3",
+              "volume": 1
+            },
+            "start": 0
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "image",
+              "src": "https://assets.aws.londynek.net/images/jdnews-agency/2191248/434080-202509221115-lg2.jpg"
+            },
+            "start": 0,
+            "length": 4,
+            "transition": {
+              "in": "fade",
+              "out": "fade"
+            }
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "image",
+              "src": "https://assets.aws.londynek.net/images/infographics/434083-202509221123-xl.jpg"
+            },
+            "start": 3,
+            "length": 4,
+            "transition": {
+              "in": "fade",
+              "out": "fade"
+            },
+            "offset": {
+              "x": 0.273,
+              "y": 0.11
+            },
+            "position": "center"
+          }
+        ]
+      },
+      {
+        "clips": [
+          {
+            "asset": {
+              "type": "title",
+              "text": "Niemal połowa Polaków nie zgłosiłaby się do obrony kraju w razie wojny.",
+              "style": "minimal",
+              "color": "#ffff00",
+              "background": "#008000",
+              "size": "small"
+            },
+            "start": 0,
+            "length": 4.24,
+            "transition": {
+              "in": "fade",
+              "out": "fade"
+            }
+          },
+          {
+            "asset": {
+              "type": "title",
+              "text": "Sprawdź szczegóły sondażu na londynek.net!",
+              "style": "minimal",
+              "color": "#ffff00",
+              "background": "#008000",
+              "size": "small"
+            },
+            "start": 4.24,
+            "length": 1.76,
+            "transition": {
+              "in": "fade",
+              "out": "fade"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "output": {
+    "format": "mp4",
+    "fps": 25,
+    "size": {
+      "width": 1920,
+      "height": 1080
+    }
+  }
+}

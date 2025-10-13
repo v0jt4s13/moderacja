@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% set hide_sidebar = true %}
+{% block title %}🔐 Logowanie{% endblock %}
+{% block header_title %}🔐 Zaloguj się{% endblock %}
+
+{% block content %}
+  <section class="panel" style="max-width: 420px; margin: 5vh auto;">
+    <h2 style="margin-top:0;">Witaj ponownie 👋</h2>
+    <p class="muted">Podaj dane logowania, aby uzyskać dostęp do panelu.</p>
+    <form method="post" action="{{ url_for('login') }}">
+      <div class="field">
+        <label for="email">📧 Email</label>
+        <input type="text" id="email" name="email" autocomplete="username" required />
+      </div>
+      <div class="field">
+        <label for="password">🔑 Hasło</label>
+        <input type="password" id="password" name="password" autocomplete="current-password" required />
+      </div>
+      <div class="spacer"></div>
+      <div class="btn-row">
+        <button class="btn primary" type="submit">➡️ Zaloguj</button>
+        <a class="btn" href="{{ url_for('help') }}">❓ Potrzebuję pomocy</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

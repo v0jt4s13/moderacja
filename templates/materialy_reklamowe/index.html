@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Materiały reklamowe{% endblock %}
+
+{% block header_title %}🖼️ Materiały reklamowe{% endblock %}
+
+{% block content %}
+<style>
+  .panel-form { display: grid; gap: 12px; margin-bottom: 20px; }
+  .panel-form textarea {
+    min-height: 120px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 12px;
+    resize: vertical;
+    font-family: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  }
+  .panel-form button {
+    justify-self: flex-start;
+  }
+  .gallery-results { display: grid; gap: 18px; }
+  .gallery-entry { border: 1px solid var(--border); border-radius: 12px; padding: 16px; background: var(--panel); box-shadow: var(--shadow); }
+  .entry-header { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .entry-meta { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 12px; }
+  .assets-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .asset-card { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--border); border-radius: 10px; background: color-mix(in oklab, var(--panel), var(--bg) 20%); }
+  .asset-card img, .asset-card video { width: 100%; border-radius: 8px; background: var(--bg); }
+  .asset-meta { font-size: 12px; color: var(--muted); display: grid; gap: 4px; }
+  .status-msg { padding: 12px 14px; border-radius: 10px; }
+  .status-error { background: rgba(220, 38, 38, 0.12); border: 1px solid rgba(220, 38, 38, 0.35); color: #dc2626; }
+  .status-warn { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #b45309; }
+</style>
+
+<div class="panel panel-form">
+  <form method="post" class="panel-form">
+    <label for="s3Paths">Adresy S3 (po jednym w wierszu)</label>
+    <textarea id="s3Paths" name="s3_paths" placeholder="np. https://assets.aws.example.com/news_to_video/materialy/kampania_01/">{{ paths_input }}</textarea>
+    <button type="submit" class="btn primary">Pokaż galerię</button>
+  </form>
+</div>
+
+{% if error %}
+  <div class="status-msg status-error">Błąd: {{ error }}</div>
+{% endif %}
+
+{% if results %}
+  <div class="gallery-results">
+    {% for entry in results %}
+      <div class="gallery-entry">
+        <div class="entry-header">
+          <div><strong>Źródło:</strong> <code>{{ entry.input }}</code></div>
+          {% if entry.error %}
+            <div class="status-msg status-error">Nie udało się pobrać danych: {{ entry.error }}</div>
+          {% else %}
+            <div class="entry-meta">
+              <span><strong>Bucket:</strong> {{ entry.bucket or "—" }}</span>
+              <span><strong>Prefiks:</strong> <code>{{ entry.prefix or entry.requested_prefix or "—" }}</code></span>
+              <span><strong>Liczba elementów:</strong> {{ entry.count }}</span>
+            </div>
+            {% if entry.warning %}
+              <div class="status-msg status-warn">{{ entry.warning }}</div>
+            {% endif %}
+          {% endif %}
+        </div>
+
+        {% if entry.items %}
+          <div class="assets-grid">
+            {% for asset in entry.items %}
+              <div class="asset-card">
+                {% if asset.type == 'image' %}
+                  <img src="{{ asset.url }}" alt="{{ asset.key }}">
+                {% else %}
+                  <video src="{{ asset.url }}" controls preload="metadata"></video>
+                {% endif %}
+                <div class="asset-meta">
+                  <div><a href="{{ asset.url }}" target="_blank" rel="noopener">{{ asset.key }}</a></div>
+                  <div>
+                    {% if asset.size_human %}{{ asset.size_human }}{% else %}—{% endif %}
+                    {% if asset.last_modified %} • {{ asset.last_modified }}{% endif %}
+                    • {{ asset.type }}
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% elif submitted and not error %}
+  <div class="status-msg status-warn">Podaj adres lub prefiks S3, aby wyświetlić materiały.</div>
+{% endif %}
+{% endblock %}

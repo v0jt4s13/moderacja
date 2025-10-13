@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administracyjny | {% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script>
+        // JS do przełączania trybu dark/light
+        document.addEventListener('DOMContentLoaded', () => {
+            const toggle = document.getElementById('theme-toggle');
+            const body = document.body;
+            const currentTheme = localStorage.getItem('theme') || 'light';
+
+            if (currentTheme === 'dark') {
+                body.classList.add('dark-mode');
+                toggle.textContent = '☀️';
+            } else {
+                toggle.textContent = '🌙';
+            }
+
+            toggle.addEventListener('click', () => {
+                body.classList.toggle('dark-mode');
+                const theme = body.classList.contains('dark-mode') ? 'dark' : 'light';
+                localStorage.setItem('theme', theme);
+                toggle.textContent = theme === 'dark' ? '☀️' : '🌙';
+            });
+        });
+    </script>
+</head>
+<body>
+    <div id="app-container">
+        {% include 'partials/_menu.html' %}
+
+        <div style="flex-grow: 1; display: flex; flex-direction: column;">
+            <header>
+                <div>
+                    <h1>{% block current_directory %}Panel Główny 🚀{% endblock %}</h1>
+                </div>
+                <div>
+                    <span id="theme-toggle" title="Przełącz tryb">🌙</span>
+                </div>
+            </header>
+
+            <main>
+                {% block content %}
+                    {% endblock %}
+            </main>
+
+            {% include 'partials/_footer.html' %}
+        </div>
+    </div>
+</body>
+</html>
+

@@ -1,0 +1,232 @@
+
+<nav class="nav">
+  <a href="" class="active">🏠 Dashboard</a>
+  <a href="" class="">🗂️ Kolejka moderacji</a>
+  <a href="" class="">👥 Użytkownicy</a>
+  <a href="" class="">⚙️ Ustawienia</a>
+  <a href="">🚪 Wyloguj</a>
+</nav>
+
+<style>
+/* * { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; } */
+
+/* SIDEBAR */
+.navbar{
+  position: fixed; top:0; left:-190px; height:100vh; width:200px;
+  background:#1f1f1f; color:#fff; transition:left .3s ease;
+  z-index:1000; padding-top:1rem;
+  overflow: hidden; /* ← brak scrolla i overflowu w sidebarze */
+}
+.navbar:hover{ left:0; }
+.navbar::after{ content:''; position:absolute; right:-10px; top:0; width:10px; height:100%; background:transparent; }
+
+.logo{
+  font-size:.8rem; display:flex; font-weight:bold; padding:1rem; text-align:right;
+  flex-direction:row; justify-content:space-between;
+}
+.logo a{ color:#fff; text-decoration:none; }
+
+/* LISTA GŁÓWNA + DROPDOWNY W KOLUMNIE */
+.nav-list,
+.nav-list ul,
+.nav-item,
+.dropdown{
+  display:flex; flex-direction:column; align-items:stretch; margin:0; padding:0; list-style:none;
+}
+
+/* PRZYCISKI SEKCJI (główne poziomy) */
+.nav-item{ border-bottom:1px solid #333; }
+.dropdown-btn{
+  width:100%; padding:.75rem 1rem; background:transparent; border:none; color:#fff;
+  text-align:left; font-size:1rem; cursor:pointer;
+}
+
+/* PODMENU — domyślnie schowane, płynne rozwijanie */
+.dropdown{
+  background:#2e2e2e;
+  overflow: hidden;           /* ukryj zawartość przy zwinięciu */
+  max-height: 0;              /* zwinięte */
+  transition: max-height .28s ease; /* płynne rozwijanie */
+  gap:2px;
+}
+.dropdown li{ padding:2px 4px; }
+.dropdown li a{
+  display:block; width:100%; padding:.35rem .6rem;
+  color:#ccc; text-decoration:none; font-size:small; border-radius:.25rem;
+}
+.dropdown li a:hover{ background:#444; color:#fff; }
+
+/* POKAŻ TYLKO GŁÓWNE NAGŁÓWKI PRZY HOVERZE SIDEBARA */
+.nav-list:hover .dropdown{ max-height:0; } /* wszystko zwinięte przy samym hoverze */
+
+/* Otwarta sekcja — rozwinięte podmenu (ustaw max-height na tyle, by pomieściło linki) */
+.nav-item.open > .dropdown{ max-height: 800px; } /* możesz zwiększyć, jeśli masz więcej pozycji */
+
+/* ACTIVE (LIGHT MODE domyślnie) */
+.nav-item a.active,
+.dropdown li a.active{
+  background:#e0f7ff; color:#0077aa; font-weight:bold; border-left:4px solid #0077aa; padding-left:.8rem;
+}
+
+/* DARK MODE VARIANT */
+body.dark-mode .navbar{ background:#1f1f1f; color:#fff; }
+body.dark-mode .dropdown{ background:#2e2e2e; }
+body.dark-mode .dropdown li a.active{
+  background:#333; color:#00aaff; border-left:4px solid #00aaff;
+}
+body.dark-mode .nav-item a.active{
+  background:#444; color:#fff; border-left:4px solid #00aaff;
+}
+
+/* Podtytuły działów w dropdownie (np. "Ogłoszenia", "Forum") */
+.nav-item > .dropdown > li > div{
+  color:#aaa; font-size:.9rem; padding:.4rem 1rem .2rem;
+}
+
+/* Opcjonalnie: brak widocznych pasków (gdyby przeglądarka mimo wszystko je rysowała) */
+.navbar::-webkit-scrollbar{ width:0; height:0; }
+
+/* --- FIX: wszystko jeden pod drugim w dropdownach --- */
+
+/* sam dropdown nie jest flexem – zwykły blok */
+.dropdown {
+  display: block;
+}
+
+/* węzły sekcji (np. Ogłoszenia / Forum / Newsroom) też jako bloki */
+.dropdown > li {
+  display: block;
+}
+
+/* nagłówek sekcji (np. "Forum") jako pełna linia */
+.dropdown > li > div {
+  display: block;
+  width: 100%;
+}
+
+/* lista linków w sekcji — zwykły block-layout */
+.dropdown > li > ul {
+  display: block;
+  margin: 0 0 .25rem 0;
+  padding: 0 .2rem .25rem .8rem; /* lekkie wcięcie pod nagłówkiem */
+  list-style: none;
+}
+
+/* każdy link w osobnym wierszu na pełną szerokość */
+.dropdown > li > ul > li {
+  display: block;
+  float: none;              /* na wszelki wypadek, gdyby coś go „wypychało” */
+  width: 100%;
+}
+
+.dropdown > li > ul > li a {
+  display: block;
+  width: 100%;
+  white-space: normal;      /* pozwól łamać długie tytuły */
+}
+
+/* gdy używasz ikon w <a>, zachowaj jedną linię w obrębie linku */
+.dropdown > li > ul > li a .icon {
+  margin-right: .4rem;
+}
+
+</style>
+
+<!-- <button id="theme-toggle" onclick="toggleTheme()" style="
+            position: fixed;
+            top: 3px;
+            right: 0px;
+            font-size: 1.2rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            z-index: 9999;">🌙</button> -->
+<nav class="nav">
+    <!-- <div class="logo">
+        <div><a href="/">🏠 Start</a></div>
+        <div>📁 Menu</div>
+    </div> -->
+    
+    <ul class="nav-list">
+
+      <!-- News to Video → Tekst (admin + moderator) -->
+      {% if session.get('role') in ['admin','redakcja','moderator','tester'] %}
+      <li class="nav-item">
+        <button class="dropdown-btn">🎙️ News → Video ▾</button>
+        <ul class="dropdown">
+          <li class="{% if request.path == '/news-to-video/create' %}active{% endif %}">
+            <a href="/news-to-video/create">📤 Create NEW</a>
+          </li>
+          <li class="{% if request.path == '/news-to-video/' or request.path.startswith('/news-to-video/video-news-list') %}active{% endif %}">
+            <a href="/news-to-video/video-news-list">📄 Lista projektów</a>
+          </li>
+          <li class="{% if request.path.startswith('/news-to-video/provider-proxy') %}active{% endif %}">
+            <a href="/news_to_video/provider_proxy_form">🚷 Provider Proxy</a>
+          </li>
+        </ul>
+      </li>
+      <li class="nav-item">
+        <a class="{% if request.path.startswith('/price-compare') %}active{% endif %}" href="{{ url_for('price_compare.index') }}">
+          🛒 Porównanie cen
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="{% if request.path.startswith('/materialy-reklamowe') %}active{% endif %}" href="{{ url_for('materialy_reklamowe.index') }}">
+          🖼️ Materiały reklamowe
+        </a>
+      </li>
+      {% endif %}
+
+    </ul>
+
+
+</nav>
+
+<script>
+  // ACCORDION: tylko jedna sekcja otwarta naraz
+  document.querySelectorAll('.dropdown-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.nav-item');
+      const openItem = document.querySelector('.nav-item.open');
+      if (openItem && openItem !== item) openItem.classList.remove('open');
+      item.classList.toggle('open');
+    });
+  });
+
+  // THEME: zapisz/odtwórz wybór
+  (function initTheme(){
+    const saved = localStorage.getItem('theme'); // 'light' | 'dark'
+    if (saved === 'dark') document.body.classList.add('dark-mode');
+    updateThemeIcon();
+  })();
+
+  function setTheme(mode){
+    if (mode === 'dark') document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
+    localStorage.setItem('theme', mode);
+    // (opcjonalnie) aktualizacja ikonki przycisku:
+    const btn = document.getElementById('theme-toggle');
+    if (btn) btn.textContent = mode === 'dark' ? '☀️' : '🌙';
+  }
+
+  function toggleTheme(){
+    const isDark = document.body.classList.contains('dark-mode');
+    setTheme(isDark ? 'light' : 'dark');
+  }
+
+  /*  
+  function setTheme(mode){
+    if (mode === 'dark') document.body.classList.add('dark-mode');
+    else document.body.classList.remove('dark-mode');
+    localStorage.setItem('theme', mode);
+    updateThemeIcon();
+  }
+  */
+  function updateThemeIcon(){
+    const btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+    const isDark = document.body.classList.contains('dark-mode');
+    btn.textContent = isDark ? '☀️' : '🌙';
+  }
+</script>

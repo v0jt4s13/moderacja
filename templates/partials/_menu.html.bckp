@@ -1,0 +1,19 @@
+<nav>
+    <p><strong>Admin Panel 🛠️</strong></p>
+    <hr>
+    <a href="{{ url_for('index') }}" class="{% if current_page == 'dashboard' %}current-dir{% endif %}">
+        🏠 Dashboard
+    </a>
+    <a href="{{ url_for('users') }}" class="{% if current_page == 'users' %}current-dir{% endif %}">
+        🧑‍🤝‍🧑 Użytkownicy
+    </a>
+    <a href="{{ url_for('settings') }}" class="{% if current_page == 'settings' %}current-dir{% endif %}">
+        ⚙️ Ustawienia
+    </a>
+    <a href="{{ url_for('logs') }}" class="{% if current_page == 'logs' %}current-dir{% endif %}">
+        📜 Logi Systemowe
+    </a>
+    <a href="{{ url_for('logout') }}" style="color: #dc3545;">
+        🚪 Wyloguj
+    </a>
+</nav>

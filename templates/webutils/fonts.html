@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Prezentacja Fontów</title>
+  {{ link_tag|safe }}
+  <link rel="stylesheet" href="{{ url_for('static', filename='webutils/css/style.css') }}">
+</head>
+<body>
+  <h1>Prezentacja Fontów</h1>
+  <div id="form-section">
+    <textarea id="userText" placeholder="Wpisz tutaj swój tekst..."></textarea><br>
+    <button onclick="updatePreviews()">Pokaż w różnych fontach</button>
+  </div>
+
+  <div id="preview-container">
+    <div class="font-preview" style="font-family: 'Roboto', sans-serif;">
+      <div class="font-name">Roboto</div>
+      <div class="font-text"></div>
+    </div>
+    <div class="font-preview" style="font-family: 'Lobster', cursive;">
+      <div class="font-name">Lobster</div>
+      <div class="font-text"></div>
+    </div>
+    <div class="font-preview" style="font-family: 'Playfair Display', serif;">
+      <div class="font-name">Playfair Display</div>
+      <div class="font-text"></div>
+    </div>
+    <div class="font-preview" style="font-family: 'Inconsolata', monospace;">
+      <div class="font-name">Inconsolata</div>
+      <div class="font-text"></div>
+    </div>
+
+    {{ html_blocks|safe }}
+  </div>
+
+  <script>
+    function updatePreviews() {
+      const text = document.getElementById('userText').value;
+      const previews = document.querySelectorAll('.font-text');
+      previews.forEach(el => {
+        el.textContent = text;
+      });
+    }
+  </script>
+</body>
+</html>

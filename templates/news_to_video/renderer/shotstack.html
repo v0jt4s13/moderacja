@@ -1,0 +1,200 @@
+<div class="card" style="grid-column:1 / -1;background:#0f1522;border:1px solid #233248;">
+  <h2>Shotstack — konfiguracja renderu</h2>
+  <div class="body" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;">
+
+    <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column:1 / -1;">
+      <legend>Autoryzacja i preset</legend>
+      <label>API Key
+        <input type="text" name="shotstack_api_key" value="XazvDrH1Gej829fRUkIQK5gORWxLnqMDTGCSTK07" placeholder="sk_live_..." />
+      </label>
+      <div class="row" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px;">
+        <label>Środowisko
+          <select name="shotstack_env">
+            <option value="stage" selected>stage (sandbox)</option>
+            <option value="v1">production (v1)</option>
+          </select>
+        </label>
+        <label>Region
+          <select name="shotstack_region">
+            <option value="eu1" selected>EU (eu1)</option>
+            <option value="us1">US (us1)</option>
+            <option value="au1">AU (au1)</option>
+          </select>
+        </label>
+        <label>Preset jakości
+          <select name="shotstack_preset">
+            <option value="9x16_vertical" selected>Vertical 9:16 (1080x1920 @ 25fps)</option>
+            <option value="16x9_horizontal">Horizontal 16:9 (1920x1080 @ 25fps)</option>
+            <option value="1x1_square">Square 1:1 (1080x1080 @ 25fps)</option>
+          </select>
+        </label>
+      </div>
+      <div class="row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px;">
+        <label>Format
+          <select id="ss-format">
+            <option value="mp4" selected>mp4</option>
+            <option value="gif">gif</option>
+          </select>
+        </label>
+        <label>Webhook (opcjonalnie)
+          <input type="text" id="ss-callback" name="shotstack_webhook_url" placeholder="https://twoj-serwer/callback/shotstack" />
+        </label>
+      </div>
+
+      <div class="hidden-row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px;">
+        <label>Szerokość (px)
+          <input id="ss-width" type="number" min="320" step="2" value="1080" />
+        </label>
+        <label>Wysokość (px)
+          <input id="ss-height" type="number" min="320" step="2" value="1920" />
+        </label>
+      </div>
+
+      <!-- <div class="muted" style="margin-top:8px;">
+        Preset 9:16 automatycznie wymusza pionowe wideo 1080x1920. Możesz nadpisać rozmiar ręcznie powyżej.
+      </div> -->
+    </fieldset>
+
+    <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column: 1 / -1;">
+      <legend>Fonty i napisy</legend>
+      <label>Źródło fontu (TTF)
+        <input id="ss-font-src" type="text" value="https://assets-static.londynek.net/assets/fonts/googleapi/RobotoCondensed/static/RobotoCondensed-Bold.ttf" placeholder="https://.../font.ttf" />
+      </label>
+
+      <div class="fieldset-inputs-flex-row">
+        <label>Rodzina fontu
+          <input id="ss-font-family" type="text" value="Roboto Condensed" placeholder="Roboto Condensed" />
+        </label>
+        <label>Rozmiar (px)
+          <input id="ss-font-size" type="number" min="8" value="72" />
+        </label>
+        <label>Line height
+          <input id="ss-font-lineheight" type="number" min="0.5" step="0.1" value="1.1" />
+        </label>
+        <label>Kolor tekstu
+          <input id="ss-font-color" type="text" value="#ffffff" placeholder="#RRGGBB" />
+        </label>
+        <label>Kolor tła
+          <input id="ss-bg" type="text" value="#1859b4" placeholder="#RRGGBB" />
+        </label>
+        <label>Opacity tła
+          <input id="ss-bg-opacity" type="number" min="0" max="1" step="0.05" value="0.85" />
+        </label>
+        <label>Zaokrąglenie (px)
+          <input id="ss-bg-radius" type="number" min="0" step="1" value="24" />
+        </label>
+        <label>Padding (px)
+          <input id="ss-bg-padding" type="number" min="0" step="1" value="16" />
+        </label>
+        <label>Kolor obrysu
+          <input id="ss-stroke" type="text" value="#1859b4" placeholder="#RRGGBB" />
+        </label>
+        <label>Szerokość obrysu
+          <input id="ss-stroke-width" type="number" min="0" step="0.1" value="0" />
+        </label>
+      </div>
+
+    </fieldset>
+
+
+    <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column:1 / -1;">
+      <legend>Warstwy graficzne</legend>
+
+      <label>Logo (PNG/SVG)
+        <input id="ss-logo-src" type="text" value="https://assets-static.londynek.net/assets/images/logos/logo-londynek-light@2x.png" placeholder="https://.../logo.png" />
+      </label>
+      <div class="fieldset-inputs-flex-row">
+        <label>Logo — skala
+          <input id="ss-logo-scale" type="number" min="0.01" step="0.01" value="0.05" />
+        </label>
+        <label>Logo offset X
+          <input id="ss-logo-offset-x" type="number" step="0.01" value="0.29" />
+        </label>
+        <label>Logo offset Y
+          <input id="ss-logo-offset-y" type="number" step="0.01" value="0.45" />
+        </label>
+      </div>
+      
+      <label>Overlay (foreground)
+        <input id="ss-overlay-foreground" type="text" value="{{ fallback_overlay }}" placeholder="https://.../overlay.png" />
+      </label>
+      <div class="fieldset-inputs-flex-row">
+        <label>Overlay opacity
+          <input id="ss-overlay-opacity" type="number" min="0" max="1" step="0.05" value="0.5" />
+        </label>
+        <label>Overlay scale
+          <input id="ss-overlay-scale" type="number" min="0.1" step="0.05" value="1" />
+        </label>
+        <label>Overlay offset Y
+          <input id="ss-overlay-offset-y" type="number" step="0.01" value="0.05" />
+        </label>
+        <label>Overlay offset X
+          <input id="ss-overlay-offset-x" type="number" step="0.01" value="0" />
+        </label>
+      </div>
+
+      <label>Maska luma (transition)
+        <input id="ss-luma-src" type="text" value="{{ fallback_luma }}" placeholder="https://.../luma.mp4" />
+      </label>
+    </fieldset>
+
+    <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column:1 / -1;">
+      <legend>Animacja galerii</legend>
+
+      <div class="fieldset-inputs-flex-row">
+        <label>Slide length (s)
+          <input id="ss-slide-length" type="number" min="1" step="0.5" value="6" />
+        </label>
+        <label>Overlap (s)
+          <input id="ss-slide-overlap" type="number" min="0" step="0.5" value="2" />
+        </label>
+        <label>Offset start (x)
+          <input id="ss-slide-offset-from" type="number" step="0.05" value="0.75" />
+        </label>
+        <label>Offset end (x)
+          <input id="ss-slide-offset-to" type="number" step="0.05" value="-0.75" />
+        </label>
+      </div>
+
+    </fieldset>
+
+    
+    <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column:1 / -1;">
+      <legend>Tytuły i CTA</legend>
+      <label>Tekst podtytułu (SUBTITLE)
+        <input id="ss-subtitle-text" type="text" value="{{SUBTITLE}}" placeholder="Treść zastępująca {{SUBTITLE}}" />
+      </label>
+
+      <div class="fieldset-inputs-flex-row">
+        <label>Font (tytuł)
+          <input id="ss-title-font-family" type="text" value="Roboto Condensed" />
+        </label>
+        <label>Rozmiar tytułu (px)
+          <input id="ss-title-font-size" type="number" min="12" value="64" />
+        </label>
+        <label>Kolor tytułu
+          <input id="ss-title-font-color" type="text" value="#ffffff" />
+        </label>
+        <label>Rozmiar podtytułu (px)
+          <input id="ss-subtitle-font-size" type="number" min="12" value="42" />
+        </label>
+        <label>Kolor podtytułu
+          <input id="ss-subtitle-font-color" type="text" value="#ffffff" />
+        </label>
+        
+      </div>
+
+    </fieldset>
+
+
+    <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column:1 / -1;">
+      <legend>Uwagi</legend>
+      <p class="muted">
+        Finalny payload tworzy placeholdery <span class="mono">{{TITLE}}</span> oraz <span class="mono">{{SUBTITLE}}</span>. 
+        Podczas renderu zostaną zastąpione wartościami z formularza (tytuł artykułu i pole „Tekst podtytułu”).
+        Napisy (SRT) są generowane lokalnie i osadzane jako <span class="mono">asset.type = "caption"</span> z ustawieniami powyżej.
+      </p>
+    </fieldset>
+
+  </div>
+</div>

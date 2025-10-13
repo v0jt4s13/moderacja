@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}Przeglądarka Emoji 🧐{% endblock %}
+
+{% block header %}Przeglądarka Emoji 🧐{% endblock %}
+
+{% block content %}
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    input[type="text"] {
+      width: 300px;
+      padding: 10px;
+      margin: 20px auto;
+      display: block;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    h2 {
+      border-bottom: 2px solid #ccc;
+      padding-bottom: 5px;
+      margin-top: 30px;
+    }
+    .emoji-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .emoji-item {
+      background: rgb(41, 40, 40);
+      border-radius: 6px;
+      box-shadow: 0 0 5px rgb(180 171 171 / 90%);
+      padding: 6px;
+      text-align: center;
+      width: fit-content;
+      min-width: 80px;
+      font-size: 25px;
+      transition: transform 0.2s;
+      margin: 3px;
+    }
+    .emoji-item:hover {
+      transform: scale(1.2);
+      cursor: pointer;
+    }
+    .emoji-label {
+      font-size: 10px;
+      color: #666;
+      width: auto;
+    }
+    .category {
+      margin-bottom: 40px;
+    }
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+<h1>📚 Przeglądarka Emoji z Wyszukiwarką</h1>
+<input type="text" id="search" placeholder="Szukaj np. serce, śmiech, dzwonek...">
+
+<div id="emoji-container"></div>
+<a href="https://unicode.org/emoji/charts/full-emoji-list.html">Unicode full emoji list</a>
+&nbsp;|&nbsp;<a href="https://emojidb.org/right-sign-emojis">Emoji db list</a>
+<script>
+// Dane emoji – można rozbudować!
+const emojiData = [
+  {
+    category: "#️⃣ℹ️ Różne",
+    emojis: [
+      { symbol: "#️⃣", name: "hash tag", name_en: "hash tag" },
+      { symbol: "♻", name: "recykling" },
+      { symbol: "ℹ️", name: "info 1" },
+      { symbol: "ℹ", name: "info 2" },
+      { symbol: "🌐", name: "webnet" },
+      { symbol: "✖", name: "x sign" },
+      { symbol: "💤", name: "sleep" },
+      { symbol: "🛏", name: "bed" },
+      { symbol: "🖊", name: "pen" },
+      { symbol: "☠️", name: "crossbone" },
+      { symbol: "🏞️", name: "picture" },
+      { symbol: "🌄", name: "picture" },
+      { symbol: "⛶", name: "image" },
+      { symbol: "❤️‍🔥", name: "hart burn" },
+    ]
+    
+  }, {
+    category: "🧍‍♂️ Ludzie i emocje",
+    emojis: [
+      { symbol: "😀", name: "uśmiech" },
+      { symbol: "😂", name: "śmiech" },
+      { symbol: "🥺", name: "proszę" },
+      { symbol: "😎", name: "cool" },
+      { symbol: "😭", name: "płacz" },
+      { symbol: "😍", name: "zakochany" },
+      { symbol: "😡", name: "złość" },
+      { symbol: "🤔", name: "zastanawianie się" },
+      { symbol: "🤗", name: "przytul" },
+      { symbol: "👍", name: "kciuk w górę" },
+      { symbol: "👎", name: "kciuk w dół" },
+      { symbol: "👏", name: "brawo" },
+      { symbol: "🙏", name: "modlitwa / proszę" },
+      { symbol: "（ ͜.人 ͜.）", name: "boobs" },
+      { symbol: "⎚-⎚", name: "okulary" },
+      { symbol: "📍", name: "pinezka" },
+      { symbol: "𝄃𝄃𝄂𝄂𝄀𝄁𝄃𝄂𝄂𝄃", name: "barcode" },
+      { symbol: "♔♕♖♗♘♙", name: "king (król), queen (hetman/dama), rook (wieża), pawn (pionek), knight (skoczek/koń), bishop (goniec)" },
+
+      { symbol: "🫅🏼", name: "king" },
+      { symbol: "♚", name: "" },
+      { symbol: "♔", name: "" },
+
+      { symbol: "👑", name: "queen" },
+      { symbol: "♛", name: "" },
+      { symbol: "♕️", name: "" },
+
+      { symbol: "♜", name: "rook" },
+      { symbol: "♜", name: "" },
+      { symbol: "♖", name: "" },
+
+      { symbol: "♟️", name: "pawn" },
+      { symbol: "♟", name: "" },
+      { symbol: "♙", name: "" },
+
+      { symbol: "🐴", name: "knight" },
+      { symbol: "♞", name: "" },
+      { symbol: "♘", name: "" },
+
+      { symbol: "♝", name: "bishop" },
+      { symbol: "♝", name: "" },
+      { symbol: "♗", name: "" },
+
+    ]
+  },
+  {
+    category: "⚡ Akcje i komunikacja",
+    emojis: [
+      { symbol: "📤", name: "wyślij" },
+      { symbol: "📥", name: "odbierz" },
+      { symbol: "🗑️", name: "usuń" },
+      { symbol: "🔔", name: "dzwonek" },
+      { symbol: "📝", name: "notatka" },
+      { symbol: "🔒", name: "zamknięte" },
+      { symbol: "🔓", name: "otwarte" },
+      { symbol: "⚠️", name: "ostrzeżenie" },
+      { symbol: "❌", name: "błąd / anuluj" },
+      { symbol: "✅", name: "zatwierdź" },
+      { symbol: "➕", name: "dodaj" },
+      { symbol: "➖", name: "usuń" },
+      { symbol: "➡️", name: "dalej / strzałka" },
+      { symbol: "⬅️", name: "wstecz / strzałka" },
+      { symbol: "⏭️", name: "next" },
+      { symbol: "⏮️", name: "previous" },
+      { symbol: "⏩", name: "scroll forward" },
+      { symbol: "⏪", name: "scroll backward" },
+      { symbol: "#️⃣", name: "hash tag" },
+      { symbol: "🔊", name: "volume" },
+      { symbol: "🎶", name: "music" },
+      { symbol: "📽", name: "cinema projector 1" },
+      { symbol: "🎦", name: "cinema projector 2" },
+    ]
+  },
+  {
+    category: "📰 Media i informacje",
+    emojis: [
+      { symbol: "📰", name: "gazeta" },
+      { symbol: "📺", name: "telewizor" },
+      { symbol: "🎧", name: "słuchawki" },
+      { symbol: "🎤", name: "mikrofon" },
+      { symbol: "🎬", name: "film" },
+      { symbol: "📷", name: "aparat" },
+      { symbol: "📸", name: "zdjęcie" },
+      { symbol: "📹", name: "kamera video" }
+    ]
+  },
+  {
+    category: "🌍 Miejsca i podróże",
+    emojis: [
+      { symbol: "🌍", name: "Ziemia" },
+      { symbol: "🚗", name: "auto" },
+      { symbol: "✈️", name: "samolot" },
+      { symbol: "🗺️", name: "mapa" },
+      { symbol: "🏕️", name: "kemping" },
+      { symbol: "🚲", name: "rower" },
+      { symbol: "🚀", name: "rakieta" }
+    ]
+  },
+  {
+    category: "💼 Praca i narzędzia",
+    emojis: [
+      { symbol: "💼", name: "teczka" },
+      { symbol: "🪑", name: "chair" },
+      { symbol: "⌨️", name: "keyboard" },
+      { symbol: "🖱️", name: "mouse" },
+      { symbol: "🗃️", name: "files folder" },
+      { symbol: "🗄️", name: "files cabinet" },
+      { symbol: "📎", name: "paperclip" },
+      { symbol: "🖥️", name: "komputer" },
+      { symbol: "💻", name: "laptop" },
+      { symbol: "☕️", name: "coffe" },
+      { symbol: "✂️", name: "scissors" },
+      { symbol: "📄", name: "page" },
+      { symbol: "🛠️", name: "narzędzia" },
+      { symbol: "🛠", name: "narzędzia" },
+      { symbol: "📈", name: "wykres wzrostu" },
+      { symbol: "📉", name: "wykres spadku" },
+      { symbol: "📊", name: "analiza danych" },
+      { symbol: "🗂️", name: "folder 1" },
+      { symbol: "📁", name: "folder 2" },
+      { symbol: "📂", name: "folder open" },
+      { symbol: "📑", name: "filling system" },
+      { symbol: "📅", name: "kalendarz" },
+      { symbol: "📎", name: "spinacz" },
+      { symbol: "⚙", name: "gear"},
+      { symbol: "ⓐ", name: "at symbol"}
+    ]
+  },
+  {
+    category: "❤️ Symbole",
+    emojis: [
+      { symbol: "❤️", name: "serce" },
+      { symbol: "💔", name: "złamane serce" },
+      { symbol: "💯", name: "sto procent" },
+      { symbol: "✨", name: "błysk" },
+      { symbol: "🔥", name: "ogień" },
+      { symbol: "🌟", name: "gwiazda" },
+      { symbol: "🎉", name: "świętowanie" },
+      { symbol: "🎁", name: "prezent" }
+    ]
+  }
+];
+
+// Generowanie emoji na stronie
+const container = document.getElementById('emoji-container');
+emojiData.forEach(group => {
+  const section = document.createElement('div');
+  section.className = 'category';
+  const heading = document.createElement('h2');
+  heading.textContent = group.category;
+  const grid = document.createElement('div');
+  grid.className = 'emoji-grid';
+  group.emojis.forEach(emoji => {
+    const item = document.createElement('div');
+    item.className = 'emoji-item';
+    item.dataset.name = emoji.name.toLowerCase();
+    item.innerHTML = `${emoji.symbol}<div class="emoji-label">${emoji.name}</div>`;
+    grid.appendChild(item);
+  });
+  section.appendChild(heading);
+  section.appendChild(grid);
+  container.appendChild(section);
+});
+
+// Filtrowanie emoji
+document.getElementById('search').addEventListener('input', function() {
+  const query = this.value.toLowerCase();
+  const items = document.querySelectorAll('.emoji-item');
+  items.forEach(item => {
+    if (item.dataset.name.includes(query)) {
+      item.classList.remove('hidden');
+    } else {
+      item.classList.add('hidden');
+    }
+  });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}S3 — Lista mediów{% endblock %}
+
+{% block header %}S3 — Lista mediów{% endblock %}
+
+{% block content %}
+
+  <style>
+    /* body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;margin:20px;color:#111} */
+    /* h1{font-size:22px;margin:0 0 12px} */
+    .muted{color:#666;font-size:13px}
+    ul.main-wrap{
+        list-style: none; 
+        padding-left: 16px;
+        flex-direction: column;
+        align-items: flex-end;
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+        align-items: flex-start;
+    }
+    .year ul {
+        display: flex;
+        flex-direction: column;
+        flex-wrap: nowrap;
+    }
+    .year strong {
+        font-size: xx-large; 
+        background-color: #00482aba;
+        padding: 8px;
+    }
+    .year{
+        /* margin:10px 0; */
+        /* margin:10px -20px; */
+        margin:10px -1em;
+    }
+    .month{
+        /* margin:4px 0 */
+        /* margin: 30px -50px; */
+        margin: 30px -3em;
+        border-top-style: dashed;
+    }
+    .month span {
+        font-size: x-large;
+        margin: 0;
+    }
+    .month strong {
+        margin: 7px -7px;
+        display: block;
+        padding: 0;
+        background: transparent;
+    }
+    div.project-row {
+        display: flex;
+        width: -webkit-fill-available;
+        gap: 12px;
+        align-items: flex-start;
+        flex-wrap: wrap;
+        border-bottom-style: solid;
+        border-bottom-width: 1px;
+    }
+    div.project-row .left {
+        min-width: 50%;
+        max-width: 500px;
+        flex:1 1 260px;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+    div.project-row .right {flex:1 1 360px; max-width:500px}
+    .folder{
+        /* padding:3px 6px; */
+        padding: 10px 16px;
+        border-radius:6px;
+        background:#102b2d;
+        display:inline-block;
+        margin:2px 6px 2px 0;
+        text-wrap-style: balance;
+    }
+    .error{background:#f8d7da;padding:10px;border-radius:8px;color:#842029}
+    /* header{display:flex;align-items:center;gap:10px;justify-content:space-between;margin-bottom:16px} */
+    a.button{display:inline-block;padding:8px 12px;background:#111;color:#fff;text-decoration:none;border-radius:10px}
+    .path{font-family: ui-monospace, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:12px}
+    .tag{font-size:12px;padding:4px 8px;border-radius:6px;background:#20a84b;}
+  </style>
+
+
+  <div style="width: 100%; text-align: end;">
+      <a class="button" href="{{ url_for('news_to_video.index_html') }}">← Projekty</a>
+  </div>
+
+  {% if error %}
+    <div class="error">Błąd: {{ error }}<pre>{{ data }}</pre></div>
+  {% else %}
+    <div class="muted">
+      Bucket: <strong>{{ data.bucket }}</strong> • Prefix bazowy:
+      <span class="path">{{ data.base_prefix }}</span>
+    </div>
+
+    <ul class="main-wrap">
+      {% for y in data.years %}
+        <li class="year">
+          <strong>{{ y.year }}</strong>
+          <ul>
+            {% for m in y.months %}
+              <li class="month">
+                <!-- <div class="muted">: <strong>{{ m.month }}</strong></div> -->
+                <span style="font-size: x-large;"><strong>{{ m.month }}</strong></span>
+                {% if m.entries and m.entries|length > 0 %}
+                  <ul style="margin-left: 0.6em;">
+                    {% for e in m.entries %}
+                      <li>
+                        <!-- {{ e }} -->
+                        <div class="project-row">
+                          <div class="left">
+                            <div class="muted"><span class="path">{{ e.folder }}</span></div>
+                            <div style="font-weight:600; margin:6px 0; width: 100%">{{ e.title }}</div>
+                            <div class="tag" style="margin:4px 0; width: 100%">
+                                status: {{ e.status }}
+                            
+                                <!-- TTS -->
+                                <div style="margin:10px 20px">
+                                    <div class="muted" style="font-weight:600;margin-bottom:4px"><strong>TTS</strong></div>
+                                    <div class="muted">
+                                    provider: <b>{{ e.tts.provider or '—' }}</b><br>
+                                    <b>{{ e.tts.voice or '—' }}</b><br>
+                                    speed: <b>{{ e.tts.speed or '—' }}</b><br>
+                                    lang: <b>{{ e.tts.language or '—' }}</b>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Outputs -->
+                            {% if e.outputs %}
+                              <div style="margin-top:10px">
+                              <div class="muted" style="font-weight:600;margin-bottom:4px">Outputs</div>
+                                <ul style="list-style:none;padding-left:0;margin:0;display:flex;flex-direction:row;">
+                                  {% for ok, ov in e.outputs.items() %}
+
+                                    {% if ov is string and (ov.startswith('http://') or ov.startswith('https://')) %}
+                                      <li style="font-size:13px;margin:2px 0">
+                                        <a href="{{ ov }}" target="_blank" rel="noopener">{{ ok }}</a>
+                                      </li>
+                                    {% endif %}
+
+                                    <!-- <li style="font-size:13px;margin:2px 0">
+                                        <span class="path" style="font-weight:600">{{ ok }}</span>:
+                                        {% if ov is string and (ov.startswith('http://') or ov.startswith('https://')) %}
+                                            <span class="path" style="font-weight:600">{{ ok }}</span>
+                                            <a href="{{ ov }}" target="_blank" rel="noopener">{{ ok }}</a>
+                                        {% else %}
+                                            <span class="path">{{ ov }}</span>
+                                        {% endif %}
+                                    </li> -->
+
+                                  {% endfor %}
+                                </ul>
+                              </div>
+                            {% endif %}
+
+                          </div>
+
+                          <div class="right">
+                            {% if e.preview_url %}
+                              <video controls preload="metadata" style="width:100%;max-width:640px;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.12)">
+                                <source src="{{ e.preview_url }}" type="video/mp4">
+                              </video>
+                            {% else %}
+                              <div class="muted">Brak wygenerowanego wideo w tym katalogu.</div>
+                            {% endif %}
+
+                          </div>
+
+                        </div>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <div class="muted">brak folderów</div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+
+
+<!-- 
+  {% if error %}
+    <div class="error">Błąd: {{ error }}</div>
+  {% else %}
+    <div class="muted">
+      Bucket: <strong>{{ data.bucket }}</strong> • Prefix bazowy:
+      <span class="path">{{ data.base_prefix }}</span>
+    </div>
+
+    <ul class="main-wrap">
+      {% for y in data.years %}
+        <li class="year">
+          <strong>{{ y.year }}</strong>
+          <ul>
+            {% for m in y.months %}
+              <li class="month">
+                <span style="font-size: x-large;"><strong>{{ m.month }}</strong></span>
+                {% if m.folders and m.folders|length > 0 %}
+                  <ul style="margin-left: 0.6em;">
+                    {% for f in m.folders %}
+                      <li><span class="folder">{{ f }}</span></li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <div class="muted">brak folderów</div>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        </li>
+      {% endfor %}
+    </ul>
+  {% endif %}
+ -->
+
+
+{% endblock %}

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logowanie | Panel Administracyjny</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* Proste style do centrowania logowania */
+        body { display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .login-box { width: 300px; padding: 20px; border-radius: 8px; text-align: center; }
+    </style>
+</head>
+<body class="dark-mode"> <div class="content-box login-box">
+        <h2>Panel Administracyjny 🔑</h2>
+        <form action="{{ url_for('login') }}" method="post">
+            <div class="form-group">
+                <label for="user">Nazwa użytkownika:</label>
+                <input type="text" id="user" name="username" required>
+            </div>
+            <div class="form-group">
+                <label for="pass">Hasło:</label>
+                <input type="password" id="pass" name="password" required>
+            </div>
+            <button class="btn btn-primary" type="submit" style="width: 100%;">Zaloguj się</button>
+        </form>
+        <p style="margin-top: 15px;"><small>Tylko dla upoważnionych!</small></p>
+    </div>
+</body>
+</html>

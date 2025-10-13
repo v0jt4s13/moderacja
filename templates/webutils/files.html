@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <title>Pliki projektu</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { padding: 0.5em 1em; border-bottom: 1px solid #ccc; }
+        th { background-color: #f4f4f4; text-align: left; }
+        .dir { font-weight: bold; color: #3366cc; }
+    </style>
+</head>
+<body>
+    <h1>📁 Katalog: {{ current_path or "." }}</h1>
+    {% if current_path %}
+        <p><a href="{{ url_for('webutils.show_files') }}">🔙 Powrót do katalogu głównego</a></p>
+    {% endif %}
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Nazwa</th>
+                <th>Typ</th>
+                <th>Data modyfikacji</th>
+                <th>Właściciel</th>
+                <th>Grupa</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for f in files %}
+            <tr>
+                <td class="{{ 'dir' if f.is_dir else '' }}">
+                    {% if f.is_dir %}
+                        <a href="{{ url_for('webutils.show_files', path=f.rel_path) }}">{{ f.name }}/</a>
+                    {% else %}
+                        {{ f.name }}
+                    {% endif %}
+                </td>
+                <td>{{ "📂 katalog" if f.is_dir else "📄 plik" }}</td>
+                <td>{{ f.mtime }}</td>
+                <td>{{ f.owner }}</td>
+                <td>{{ f.group }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>

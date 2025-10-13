@@ -1,0 +1,38 @@
+  {% extends "base.html" %}
+
+  {% block title %}Strona Główna - Moderacja{% endblock %}
+  
+  {% block header %}Panel startowy moderatora{% endblock %}
+  
+  {% block content %}
+
+  <div class="container">
+    {% if session.get('role') == 'admin' %}
+      <div class="card"><a href="/adsmoderation">📝 Moderacja ogłoszeń</a></div>
+      <div class="card"><a href="/moderateforum">📝 Moderacja forum</a></div>
+      <div class="card"><a href="/audionews">🎧 Audio news</a></div>
+      <div class="card"><a href="/newssearch">🔍 Szukaj newsów</a></div>
+      <div class="card"><a href="/socialposter">📣 Social Poster</a></div>
+      <div class="card"><a href="/seo">📊 SEO Analyze</a></div>
+      <div class="card"><a href="/news-to-video/video-news-list">📄 Lista projektów video</a></div>
+      <div class="card"><a href="/webutils/files">📂 Pliki</a></div>
+      <div class="card"><a href="/webutils/logs">📜 Logi</a></div>
+      <div class="card"><a href="/webutils/fonts">🔤 Czcionki</a></div>
+      <div class="card"><a href="/webutils/emoji">😊 Emoji</a></div>
+    {% elif session.get('role') == 'redakcja' %}
+      <div class="card"><a href="/audionews">🎧 Audio news</a></div>
+      <div class="card"><a href="/socialposter">📣 Social Poster</a></div>
+      <div class="card"><a href="/newssearch">🔍 Szukaj newsów</a></div>
+    {% elif session.get('role') == 'moderator' %}
+      <div class="card"><a href="/adsmoderation/admin/logs">📝 Moderacja ogłoszeń</a></div>
+      <div class="card"><a href="/moderateforum">📝 Moderacja forum</a></div>
+      <div class="card"><a href="/socialposter">📣 Social Poster</a></div>
+      <div class="card"><a href="/audionews">🎧 Audio news</a></div>
+      <div class="card"><a href="/newssearch">🔍 Szukaj newsów</a></div>
+    {% elif session.get('role') == 'tester' %}
+      <div class="card"><a href="/news-to-video/video-news-list">📄 Lista projektów video</a></div>
+    {% else %}
+        <li>Brak uprawnień do panelu.</li>
+    {% endif %}
+  </div>
+{% endblock %}

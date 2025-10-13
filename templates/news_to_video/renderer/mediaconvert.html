@@ -1,0 +1,16 @@
+<!-- AWS MediaConvert -->
+<label>Region (np. eu-central-1)
+  <input type="text" name="mediaconvert_region" placeholder="eu-central-1" required>
+</label>
+<label>IAM Role ARN
+  <input type="text" name="mediaconvert_role_arn" placeholder="arn:aws:iam::123456789012:role/MediaConvertRole" required>
+</label>
+<label>Queue ARN
+  <input type="text" name="mediaconvert_queue_arn" placeholder="arn:aws:mediaconvert:...:queues/Default" required>
+</label>
+<label>S3 Output (s3://bucket/prefix)
+  <input type="text" name="mediaconvert_s3_output" placeholder="s3://my-bucket/outputs/" required>
+</label>
+<div class="muted" style="grid-column:1/-1">
+  Uwaga: dla MediaConvert zwykle kompozycję robimy lokalnie, a MC służy do mnożenia formatów.
+</div>

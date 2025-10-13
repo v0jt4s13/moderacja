@@ -1,0 +1,23 @@
+<div style="display:flex; gap:16px; flex-wrap: wrap;">
+  <a href="">❓ Pomoc</a>
+  <a href="">📘 Dokumentacja</a>
+  <a href="">✉️ Kontakt</a>
+  <a href="">🔏 Prywatność</a>
+  <span class="muted">© {{ now().year if now else (current_year or 2025) }} • Wszystkie prawa zastrzeżone</span>
+</div>
+
+<footer>
+  <div>
+    {% if session.get('role') == 'admin' %}
+      <a href="/webutils/files">📂 Pliki</a>
+      <a href="/webutils/logs">📜 Logi</a>
+      <a href="/webutils/fonts">🔤 Czcionki</a>
+      <a href="/webutils/emoji">😊 Emoji</a>
+      📊 Zużycie tokenów <a href="https://platform.openai.com/settings/organization/usage" target="_blank">openAI</a>
+      <a href="https://console.cloud.google.com/apis/dashboard?authuser=1&inv=1&invt=Ab20jQ&project=texttoseech-456914&pageState=(%22duration%22:(%22groupValue%22:%22P4D%22,%22customValue%22:null))" target="_blank">Google</a>
+    {% endif %}
+    
+  </div><div>
+    <br>&copy; {{ current_year }} Moderator Panel
+  </div>
+</footer>

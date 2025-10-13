@@ -1,0 +1,45 @@
+# Python cache
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+
+# Virtual environment
+venv/
+.env/
+.env.*
+**/.env
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE/editor configs
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+**/*.json
+**/*.txt
+
+# Results, rules folders anywhere
+**/rules/*.txt
+**/results/
+**/history/
+**/uploads/
+**/projects/
+
+# Backup files
+*~
+*.bak
+
+# Secrets / config
+data_settings/
+config.json
+secrets.json
+
+deploy-moderacja_ldnk.sh
+price_compare
+**/price_compare
