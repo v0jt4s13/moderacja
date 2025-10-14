@@ -124,7 +124,8 @@ def get_config(key=None):
                     "GCS_PREFIX",
                     "GOOGLE_CLOUD_PROJECT",
                     "HOME_DIR",
-                    "TEST_QQ"
+                    "TEST_QQ",
+                    "GEMINI_API_KEY"
                     ]:
                     val = CONFIG_CACHE["env"].get(var)
                     if not val:

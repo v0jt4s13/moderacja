@@ -105,3 +105,7 @@ news_to_video_logger = setup_logger(
     'log-news_to_video.log'
 )
 
+news_to_images_logger = setup_logger(
+    'news_to_images',
+    'log-news_to_images.log'
+)

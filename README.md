@@ -55,7 +55,11 @@
   - `FFPROBE_EXE` (pełna ścieżka do `ffprobe.exe`/`ffprobe`)
   Jeśli zmienne nie są ustawione, aplikacja spróbuje wykryć ffmpeg/ffprobe w typowych lokalizacjach (Windows: `C:\ffmpeg\bin`, `C:\ProgramData\chocolatey\bin`, itp.) i w PATH.
 - Uprawnienia do logów: pliki logów są zapisywane w `logs/` w katalogu projektu. Katalog jest tworzony automatycznie.
- - Windows i moduł `pwd`: `pwd`/`grp` są częścią biblioteki standardowej tylko na Linux/macOS. Na Windows nie instaluje się ich przez pip. Kod jest dostosowany, aby nie wymagać `pwd` na Windows (patrz poprawka w `logging_config.py`). Funkcja `/webutils/logs` może nadal wymagać dostosowania na Windows.
+- Gemini / generowanie obrazów:
+  - Aktywuj venv i ustaw `GEMINI_API_KEY` lub `GOOGLE_GEMINI_API_KEY`.
+  - Uruchom `python -m news_to_image.debug_gemini`, aby sprawdzić wersję biblioteki, listę modeli z `list_models()` oraz wykonać próbne wywołanie `generate_content`.
+  - Ustaw `LOG_LEVEL=DEBUG`, by zobaczyć dodatkowe logi (próby SDK i REST z payloadami). Skrypt kończy się kodem błędu, jeżeli klucz lub biblioteka są niepoprawne.
+- Windows i moduł `pwd`: `pwd`/`grp` są częścią biblioteki standardowej tylko na Linux/macOS. Na Windows nie instaluje się ich przez pip. Kod jest dostosowany, aby nie wymagać `pwd` na Windows (patrz poprawka w `logging_config.py`). Funkcja `/webutils/logs` może nadal wymagać dostosowania na Windows.
 - Błąd `ModuleNotFoundError: No module named 'pyaudioop'`:
    - W Pythonie 3.13 usunięto moduł standardowy `audioop` (PEP 594). Niektóre biblioteki próbują użyć jego zamiennika (`pyaudioop`).
    - Rozwiązania:

@@ -18,6 +18,7 @@ from auth import login_required
 from llm import ask_model_openai
 from news_to_video.main import scrap_page
 from markupsafe import Markup
+import logging
 
 from .config import DEFAULT_IMAGE_SIZE, DEFAULT_LANGUAGE, PROJECTS_DIR, ensure_project_paths
 from .generators import GeneratedImage, ImageGenerationError, get_generator
@@ -37,6 +38,8 @@ AVAILABLE_ENGINES = [
     ("midjourney", "Midjourney (extension point)"),
     ("bluewillow", "BlueWillow (extension point)"),
 ]
+
+logger = logging.getLogger("news_to_image")
 
 
 def _save_json(path: str, payload: Dict) -> None:
@@ -142,6 +145,7 @@ def create_form() -> str:
 @news_to_image_bp.post("/generate")
 @login_required(role=["admin", "redakcja", "moderator", "tester"])
 def generate_images():
+    logger.info("Start generate_images request")
     article_url = (request.form.get("article_url") or "").strip()
     engine = (request.form.get("engine") or "dalle3").strip().lower()
     try:
@@ -156,35 +160,43 @@ def generate_images():
     }
 
     if not article_url:
+        logger.warning("No article_url provided")
         flash("Podaj adres URL artykułu.", "danger")
         return redirect(url_for("news_to_image.create_form"))
 
     try:
         article_payload = scrap_page(article_url, language=DEFAULT_LANGUAGE)
         article_payload["source_url"] = article_url
+        logger.info("Scraped article: title=%s length=%s", article_payload.get("title"), len(article_payload.get("text", "")))
     except Exception as exc:
+        logger.exception("scrap_page failed: %s", exc)
         flash(f"Nie udało się pobrać artykułu: {exc}", "danger")
         return redirect(url_for("news_to_image.create_form"))
 
     prompts = _generate_prompts(article_payload, num_images)
+    logger.debug("Generated prompts count=%s", len(prompts))
 
     project_id = datetime.utcnow().strftime("img-%Y%m%d-%H%M%S")
     paths = ensure_project_paths(project_id)
+    logger.info("Using project_id=%s engine=%s", project_id, engine)
 
     try:
         generator = get_generator(engine, image_size=DEFAULT_IMAGE_SIZE)
         generated_images = generator.generate(prompts, paths.project_dir)
         status = "completed"
         error = None
+        logger.info("Generated %d images via engine=%s", len(generated_images), engine)
     except ImageGenerationError as exc:
         status = "failed"
         generated_images = []
         error = str(exc)
+        logger.error("ImageGenerationError: %s", error)
         flash(f"Błąd generowania obrazów ({engine}): {error}", "danger")
     except Exception as exc:
         status = "failed"
         generated_images = []
         error = f"Nieoczekiwany błąd: {exc}"
+        logger.exception("Unexpected error during generation: %s", exc)
         flash(error, "danger")
 
     manifest = _create_manifest(
