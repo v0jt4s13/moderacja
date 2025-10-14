@@ -1,6 +1,6 @@
 
 **Uruchomienie lokalne (Flask)**
-- Wymagania: `Python >= 3.10`
+- Wymagania: `Python 3.10–3.12` (dla 3.13 patrz uwagi dot. `audioop` poniżej)
 - Systemowe (opcjonalnie do funkcji audio/wideo): `ffmpeg`
 
 1) Klonowanie i środowisko
@@ -14,7 +14,12 @@
     - `source .venv/bin/activate`
 
 2) Instalacja zależności (minimalny zestaw do startu serwera)
-- `pip install flask python-dotenv boto3 pydub requests beautifulsoup4 python-slugify google-cloud-texttospeech azure-cognitiveservices-speech`
+- Szybki zestaw minimalny:
+  - `pip install flask openai requests beautifulsoup4 python-dotenv markupsafe`
+- Rozszerzony zestaw (obsługa S3/TTS/audio/wideo):
+  - `pip install flask openai requests beautifulsoup4 python-dotenv markupsafe boto3 pydub python-slugify google-cloud-texttospeech azure-cognitiveservices-speech`
+- Wejście/wyjście audio (opcjonalnie, jeśli nagrywasz mikrofon lub używasz zależności tego wymagających):
+  - `pip install pyaudio`
 - Uwaga: część modułów TTS jest importowana w czasie startu — powyższe paczki są wymagane nawet jeśli nie używasz tych funkcji w UI.
 
 3) Zmienne środowiskowe (logowanie)
@@ -47,6 +52,13 @@
 - Biblioteki TTS/S3: jeśli nie chcesz ich używać, ale import nadal się nie powiódł, sprawdź czy zainstalowałeś paczki z punktu 2).
 - `ffmpeg`: wymagany przez `pydub` dopiero przy operacjach na audio/wideo. Do samego startu serwera nie jest konieczny.
 - Uprawnienia do logów: pliki logów są zapisywane w `logs/` w katalogu projektu. Katalog jest tworzony automatycznie.
+ - Windows i moduł `pwd`: `pwd`/`grp` są częścią biblioteki standardowej tylko na Linux/macOS. Na Windows nie instaluje się ich przez pip. Kod jest dostosowany, aby nie wymagać `pwd` na Windows (patrz poprawka w `logging_config.py`). Funkcja `/webutils/logs` może nadal wymagać dostosowania na Windows.
+- Błąd `ModuleNotFoundError: No module named 'pyaudioop'`:
+   - W Pythonie 3.13 usunięto moduł standardowy `audioop` (PEP 594). Niektóre biblioteki próbują użyć jego zamiennika (`pyaudioop`).
+   - Rozwiązania:
+     - Preferowane: użyj Pythona 3.12.x (zalecana wersja dla tego projektu). Na Windows: `py -3.12 -m venv .venv` i aktywuj venv.
+     - Jeśli musisz zostać na 3.13: `pip install audioop-lts`. W repo dodany jest plik `pyaudioop.py`, który działa jako shim i re-eksportuje API `audioop` pod nazwą `pyaudioop`, więc importy `import pyaudioop as audioop` będą działały.
+     - Jeżeli błąd pochodzi z `pyaudio`/pakietów rozpoznawania mowy, rozważ przypięcie wersji zgodnych z 3.12 lub przejście na 3.12.
 
 7) Przydatne adresy
 - Strona główna: `http://127.0.0.1:<PORT>/`

@@ -29,12 +29,16 @@
   .status-msg { padding: 12px 14px; border-radius: 10px; }
   .status-error { background: rgba(220, 38, 38, 0.12); border: 1px solid rgba(220, 38, 38, 0.35); color: #dc2626; }
   .status-warn { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #b45309; }
+  .folders { display: grid; gap: 6px; margin: 10px 0; }
+  .folders-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .folder-chip { display:inline-block; padding:6px 10px; border:1px solid var(--border); border-radius: 999px; background: var(--panel); font-size: 12px; }
+  .folder-chip a{ text-decoration:none; }
 </style>
 
 <div class="panel panel-form">
-  <form method="post" class="panel-form">
-    <label for="s3Paths">Adresy S3 (po jednym w wierszu)</label>
-    <textarea id="s3Paths" name="s3_paths" placeholder="np. https://assets.aws.example.com/news_to_video/materialy/kampania_01/">{{ paths_input }}</textarea>
+  <form method="get" class="panel-form">
+    <label for="s3Paths">Adresy S3</label>
+    <input type="text" id="s3Paths" name="s3_paths" placeholder="np. https://assets.aws.example.com/news_to_video/materialy/kampania_01/" value="{{ paths_input }}" />
     <button type="submit" class="btn primary">Pokaż galerię</button>
   </form>
 </div>
@@ -63,9 +67,38 @@
           {% endif %}
         </div>
 
-        {% if entry.items %}
+        {# FOLDERY POD PREFIKSEM #}
+        {% set folders = entry['folders'] if 'folders' in entry else [] %}
+        {% set folders_info = entry['folders_info'] if 'folders_info' in entry else [] %}
+        {% if folders %}
+          <div class="folders">
+            <div class="entry-meta"><strong>Foldery ({{ folders|length }}):</strong></div>
+            <div class="folders-list">
+              {% for f in folders_info %}
+                {% set label = (f.key.rstrip('/').split('/')[-1]) or f.key %}
+                <span class="folder-chip"><a href="{{ f.url }}" target="_blank" rel="noopener" class="folder-link" data-path="{{ f.url }}">📁 {{ label }}</a></span>
+              {% endfor %}
+            </div>
+            <div>
+              <button type="button" class="btn add-folders-btn" data-folderlist="{{ folders|join('\n') }}">Wstaw foldery do pola</button>
+            </div>
+          </div>
+          {% if entry.pages and entry.pages > 1 %}
+            <div class="btn-row" style="margin-top:10px;">
+              <form method="get" style="display:inline-flex; gap:8px; align-items:center;">
+                <input type="hidden" name="s3_paths" value="{{ paths_input }}" />
+                <input type="hidden" name="per_page" value="{{ entry.per_page }}" />
+                <button class="btn" type="submit" name="page" value="{{ entry.page - 1 }}" {% if entry.page <= 1 %}disabled{% endif %}>◀ Poprzednia</button>
+                <button class="btn" type="submit" name="page" value="{{ entry.page + 1 }}" {% if entry.page >= entry.pages %}disabled{% endif %}>Następna ▶</button>
+              </form>
+            </div>
+          {% endif %}
+        {% endif %}
+
+        {% set items = entry['items'] %}
+        {% if items %}
           <div class="assets-grid">
-            {% for asset in entry.items %}
+            {% for asset in items %}
               <div class="asset-card">
                 {% if asset.type == 'image' %}
                   <img src="{{ asset.url }}" alt="{{ asset.key }}">
@@ -90,4 +123,27 @@
 {% elif submitted and not error %}
   <div class="status-msg status-warn">Podaj adres lub prefiks S3, aby wyświetlić materiały.</div>
 {% endif %}
+<script>
+  (function(){
+    const ta = document.getElementById('s3Paths');
+    // Klik w folder — wstaw do textarea i wyślij formularz
+    document.querySelectorAll('.folder-link').forEach(a => {
+      a.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!ta) return;
+        ta.value = a.dataset.path || '';
+        ta.form && ta.form.submit();
+      });
+    });
+    // Wstaw wszystkie foldery z wpisu do pola (bez submit)
+    document.querySelectorAll('.add-folders-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        if (!ta) return;
+        ta.value = btn.dataset.folderlist || '';
+        ta.focus();
+      });
+    });
+  })();
+</script>
 {% endblock %}
+

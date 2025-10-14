@@ -123,6 +123,22 @@
   </div>
 </div>
 
+<div style="width:-webkit-fill-available;text-align:end;padding-bottom:15px;">
+  {% if manifest.outputs and manifest.outputs.openai_sora_config %}
+  <form action="{{ url_for('news_to_video.rerender_sora_same_config', project_id=manifest.project_id) }}"
+        method="post" style="display:inline; background-color: transparent;"
+        onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Kolejkuję…';">
+    <button class="button info" type="submit">⟳ Przerenderuj Sora (te same ustawienia)</button>
+  </form>
+  {% endif %}
+
+  <form action="{{ url_for('news_to_video.generate_audio_only', project_id=manifest.project_id) }}"
+        method="post" style="display:inline; background-color: transparent;"
+        onsubmit="this.querySelector('button').disabled=true; this.querySelector('button').textContent='Generuję audio…';">
+    <button class="button" type="submit">🎙️ Generuj tylko audio</button>
+  </form>
+</div>
+
 <h3>Media</h3>
 <div class="col">
   <div class="card">
@@ -309,6 +325,50 @@
     </div>
   </div>
 </div>
+
+<h3>Brand</h3>
+<div class="col">
+  <div class="card" style="padding:12px;">
+    {% set brand = manifest.payload.brand if manifest.payload and manifest.payload.brand else {} %}
+    {% if brand %}
+      <div>Logo path: <code>{{ brand.logo_path }}</code></div>
+      {% if brand_http %}
+        <img src="{{ brand_http }}" alt="brand logo" style="max-height:80px;margin-top:8px;" />
+      {% elif brand_rel %}
+        <img src="{{ url_for('news_to_video.serve_file', relpath=brand_rel) }}" alt="brand logo" style="max-height:80px;margin-top:8px;" />
+      {% else %}
+        <div class="muted">Brak odnalezionej ścieżki do logo.</div>
+      {% endif %}
+    {% else %}
+      <div class="muted">Brak sekcji brand w payload.</div>
+    {% endif %}
+  </div>
+  
+  {% if manifest.outputs.openai_sora_prompt or manifest.outputs.openai_sora_config %}
+  <div class="card" style="padding:12px;margin-top:10px;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <a href="https://openai.com/sora" target="_blank" rel="noopener">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/4/4d/OpenAI_Logo.svg" alt="Sora2" style="height:20px;vertical-align:middle;" />
+      </a>
+      <strong>OpenAI Sora</strong>
+    </div>
+    {% if manifest.outputs.openai_sora_prompt %}
+      <div style="margin-top:8px;">
+        <div class="muted">Prompt użyty do renderu:</div>
+        <pre style="white-space:pre-wrap;">{{ manifest.outputs.openai_sora_prompt }}</pre>
+      </div>
+    {% endif %}
+    {% if manifest.outputs.openai_sora_config %}
+      <div class="muted">Konfiguracja:</div>
+      <pre>{{ manifest.outputs.openai_sora_config | tojson(indent=2) }}</pre>
+    {% endif %}
+    {% if manifest.outputs.openai_sora_request %}
+      <div class="muted">Payload do API (preview):</div>
+      <pre>{{ manifest.outputs.openai_sora_request | tojson(indent=2) }}</pre>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
 <!-- {{manifest.outputs.keys()}}<hr> -->
 <!-- {{ manifest.outputs | tojson|safe }}<hr> -->
 
@@ -333,7 +393,9 @@
     {% if mp4_rel %}
       <div id="block-169" style="display:block">
         <div class="muted">16:9</div>
-        <video id="vid-169" controls preload="metadata" class="video-box"></video>
+        <video id="vid-169" controls preload="metadata" class="video-box">
+          <source src="{{ url_for('news_to_video.serve_file', relpath=mp4_rel) }}" type="video/mp4">
+        </video>
       </div>
     {% else %}
       <div id="block-169" style="display:none">
@@ -345,7 +407,9 @@
     {% if mp4_1x1_rel %}
       <div id="block-11" style="display:block">
         <div class="muted">1:1</div>
-        <video id="vid-11" controls preload="metadata" class="video-box"></video>
+        <video id="vid-11" controls preload="metadata" class="video-box">
+          <source src="{{ url_for('news_to_video.serve_file', relpath=mp4_1x1_rel) }}" type="video/mp4">
+        </video>
       </div>
     {% else %}
       <div id="block-11" style="display:none">
@@ -357,7 +421,9 @@
     {% if mp4_9x16_rel %}
       <div id="block-916" style="display:block">
         <div class="muted">9:16</div>
-        <video id="vid-916" controls preload="metadata" class="video-box"></video>
+        <video id="vid-916" controls preload="metadata" class="video-box">
+          <source src="{{ url_for('news_to_video.serve_file', relpath=mp4_9x16_rel) }}" type="video/mp4">
+        </video>
       </div>
     {% else %}
       <div id="block-916" style="display:none">
@@ -370,6 +436,15 @@
 
 
   <p class="links" style="margin-top:10px">
+    {% if mp4_rel %}
+      <a href="{{ url_for('news_to_video.serve_file', relpath=mp4_rel) }}" download>Pobierz wideo 16:9 (MP4)</a>
+    {% endif %}
+    {% if mp4_1x1_rel %}
+      <a href="{{ url_for('news_to_video.serve_file', relpath=mp4_1x1_rel) }}" download>Pobierz wideo 1:1 (MP4)</a>
+    {% endif %}
+    {% if mp4_9x16_rel %}
+      <a href="{{ url_for('news_to_video.serve_file', relpath=mp4_9x16_rel) }}" download>Pobierz wideo 9:16 (MP4)</a>
+    {% endif %}
     {% if srt_rel %}
       <a href="{{ url_for('news_to_video.serve_file', relpath=srt_rel) }}" download>Pobierz napisy (.srt)</a>
     {% endif %}
@@ -383,6 +458,35 @@
 <pre>{{ manifest | tojson(indent=2) }}</pre>
 
 
+<script>
+  // Prosty polling statusu projektu i auto-odświeżenie po zakończeniu
+  (function(){
+    const initialStatus = ({{ (manifest.status or '""') | tojson }} || '').toLowerCase();
+    let lastStatus = initialStatus;
+    async function poll(){
+      try{
+        const res = await fetch("{{ url_for('news_to_video.api_status', project_id=manifest.project_id) }}", {cache:'no-store'});
+        if(!res.ok) return;
+        const data = await res.json();
+        const st = String(data.status||'').toLowerCase();
+        const badge = document.getElementById('statusBadge');
+        if (badge && st){
+          badge.textContent = st;
+          badge.classList.remove('status-queued','status-processing','status-done','status-error');
+          badge.classList.add('status-' + (st.replace(/[^a-z]/g,'')));
+        }
+        if (lastStatus !== 'done' && st === 'done'){
+          // pełny reload, aby podpiąć nowe ścieżki wideo i linki
+          window.location.reload();
+        }
+        lastStatus = st;
+      }catch(e){ /* ignore */ }
+    }
+    setInterval(poll, 3000);
+  })();
+</script>
+
+<!-- 
 <script>
   const pid = "{{ manifest.project_id }}";
   const manifestPayloadFormats = document.getElementById('manifest-payload-formats');
@@ -541,7 +645,8 @@
   window.__pollTimer = setInterval(poll, 3000);
   poll();
 
-</script>
+</script> -->
+
 <!-- 
 <script>
   (function () {
@@ -610,3 +715,4 @@
 </script> -->
 
 {% endblock %}
+

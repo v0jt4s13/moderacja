@@ -16,6 +16,10 @@ from typing import Any, Dict, Optional, Tuple
 from urllib.parse import urlparse
 
 import requests
+try:  # Optional, used to adapt reference image to requested size
+    from PIL import Image
+except Exception:  # pragma: no cover
+    Image = None  # type: ignore
 from openai import OpenAI, OpenAIError
 
 from loggers import news_to_video_logger
@@ -47,7 +51,7 @@ DEFAULT_PROMPT_TEMPLATE = textwrap.dedent(
 
 ALLOWED_MODELS = {"sora-2", "sora-2-pro"}
 ALLOWED_SECONDS = {"4", "8", "12"}
-ALLOWED_SIZES = {"1280x720", "720x1280", "1792x1024", "1024x1792"}
+ALLOWED_SIZES = {"1280x720", "720x1280", "1792x1024", "1024x1792", "1024x1024"}
 
 
 def _shorten_text(text: str, max_chars: int = 900) -> str:
@@ -145,6 +149,56 @@ def _download_reference_image(url: str) -> Tuple[Optional[str], Optional[Any]]:
         return None, None
 
 
+def _ensure_reference_size(local_path: str, requested_size: str, mode: str = "letterbox") -> Tuple[str, Any]:
+    """Ensure the reference image matches requested_size (e.g., '1280x720').
+    If Pillow is available and image size differs, create a letterboxed image
+    with exact target dims and return a new temp file path and open handle.
+    Falls back to the original file when Pillow is missing or errors occur.
+    """
+    try:
+        if not Image:
+            return local_path, open(local_path, "rb")
+        parts = requested_size.lower().split("x")
+        if len(parts) != 2:
+            return local_path, open(local_path, "rb")
+        tw, th = int(parts[0]), int(parts[1])
+        with Image.open(local_path) as im:
+            w, h = im.size
+            if w == tw and h == th:
+                return local_path, open(local_path, "rb")
+            im_conv = im.convert("RGB")
+            if (mode or "letterbox").lower() == "crop":
+                # Scale to cover (no bars) then center-crop
+                scale = max(tw / w, th / h)
+                nw, nh = max(1, int(round(w * scale))), max(1, int(round(h * scale)))
+                resized = im_conv.resize((nw, nh), Image.LANCZOS)
+                # crop center
+                left = max(0, (nw - tw) // 2)
+                top = max(0, (nh - th) // 2)
+                right = left + tw
+                bottom = top + th
+                canvas = resized.crop((left, top, right, bottom))
+            else:
+                # Letterbox to target while preserving aspect ratio
+                scale = min(tw / w, th / h)
+                nw, nh = max(1, int(round(w * scale))), max(1, int(round(h * scale)))
+                resized = im_conv.resize((nw, nh), Image.LANCZOS)
+                canvas = Image.new("RGB", (tw, th), (0, 0, 0))
+                ox, oy = (tw - nw) // 2, (th - nh) // 2
+                canvas.paste(resized, (ox, oy))
+            fd, tmp_out = tempfile.mkstemp(prefix="sora-ref-fit-", suffix=".jpg")
+            with os.fdopen(fd, "wb") as fh:
+                canvas.save(fh, format="JPEG", quality=90)
+            news_to_video_logger.info(
+                "[openai_sora] Adjusted reference image %s from %sx%s to %sx%s -> %s",
+                (mode or "letterbox").lower(), w, h, tw, th, tmp_out,
+            )
+            return tmp_out, open(tmp_out, "rb")
+    except Exception as exc:  # pragma: no cover
+        news_to_video_logger.warning("OpenAI Sora: reference resize failed: %s", exc)
+    return local_path, open(local_path, "rb")
+
+
 def _manifest_outputs_patch(video_path: Path, thumbnail_path: Optional[Path], video_meta: Dict[str, Any]) -> Dict[str, Any]:
     outputs = {
         "openai_sora_video": str(video_path),
@@ -182,8 +236,9 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
 
     size = str(renderer_cfg.get("size") or "1280x720")
     if size not in ALLOWED_SIZES:
-        news_to_video_logger.warning("OpenAI Sora: unsupported size '%s', defaulting to 1280x720.", size)
-        size = "1280x720"
+        news_to_video_logger.warning("OpenAI Sora: unsupported size '%s' (allowed: %s)", size, sorted(ALLOWED_SIZES))
+        # pick a sane default later based on reference image/orientation
+        size = None  # type: ignore
 
     prompt = _build_prompt(manifest, renderer_cfg)
     news_to_video_logger.info(
@@ -202,9 +257,54 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
     input_file = None
     if input_reference_url:
         tmp_path, input_file = _download_reference_image(input_reference_url)
+        # If we have a file and a requested size, make sure the image matches
+        if tmp_path and input_file:
+            try:
+                # Close initial handle before potential replacement
+                try:
+                    input_file.close()
+                except Exception:
+                    pass
+                # If size is None or 'match_image', deduce target size from image orientation
+                fit_mode = str(renderer_cfg.get("ref_image_fit") or "letterbox").lower()
+                try:
+                    iw = ih = None
+                    if Image:
+                        with Image.open(tmp_path) as im:
+                            iw, ih = im.size
+                    if (not size) or (fit_mode == "match_image"):
+                        # choose best allowed based on orientation / near-square
+                        if iw and ih:
+                            ratio = iw/ih
+                            if 0.95 <= ratio <= 1.05 and "1024x1024" in ALLOWED_SIZES:
+                                size = "1024x1024"
+                            elif ratio >= 1:
+                                size = "1280x720" if "1280x720" in ALLOWED_SIZES else next(iter(ALLOWED_SIZES))
+                            else:
+                                size = "720x1280" if "720x1280" in ALLOWED_SIZES else next(iter(ALLOWED_SIZES))
+                        else:
+                            size = size or "1280x720"
+                except Exception:
+                    size = size or "1280x720"
+                # ensure the reference image matches chosen size
+                fitted_path, fitted_file = _ensure_reference_size(tmp_path, size, fit_mode)
+                # If a new file was produced, prefer it; keep original for cleanup
+                input_file = fitted_file
+                # If a new temp was created different than tmp_path, keep both for cleanup
+                if fitted_path != tmp_path:
+                    # Track additional temp for removal after request
+                    # We'll store it in tmp_path2 local var
+                    tmp_path2 = fitted_path
+                else:
+                    tmp_path2 = None
+            except Exception as exc:
+                news_to_video_logger.warning("OpenAI Sora: reference preflight skipped: %s", exc)
+                tmp_path2 = None
 
     client = OpenAI(api_key=api_key)
     try:
+        # final guard on size
+        size = size or "1280x720"
         kwargs: Dict[str, Any] = {
             "prompt": prompt,
             "model": model,
@@ -237,6 +337,12 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
                 os.unlink(tmp_path)
             except Exception:
                 pass
+        # remove possible second tmp from fitted image
+        try:
+            if 'tmp_path2' in locals() and tmp_path2:
+                os.unlink(tmp_path2)
+        except Exception:
+            pass
 
     if video_job.status != "completed":
         raise RuntimeError(f"OpenAI Sora job did not complete successfully (status={video_job.status}).")
@@ -269,6 +375,11 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
                 audio_dir.mkdir(parents=True, exist_ok=True)
                 narration_path, timeline = synthesize_tts(segments, tts_settings, str(audio_dir))
                 news_to_video_logger.info("[openai_sora] Narration synthesized -> %s", narration_path)
+                # Save full timeline to project_dir/timeline.json
+                try:
+                    save_json(project_path / "timeline.json", {"timeline": timeline})
+                except Exception as exc_tl:
+                    news_to_video_logger.warning("OpenAI Sora: failed to save timeline.json: %s", exc_tl)
 
                 # opcjonalne napisy (SRT/ASS)
                 try:
@@ -336,6 +447,26 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
     }
 
     outputs_patch = _manifest_outputs_patch(final_video_path, thumbnail_path, video_meta)
+    # Save prompt and renderer config used for reproducibility
+    try:
+        outputs_patch["openai_sora_prompt"] = prompt
+        outputs_patch["openai_sora_config"] = {
+            "model": model,
+            "seconds": seconds,
+            "size": size,
+            "ref_image_fit": (renderer_cfg.get("ref_image_fit") or "letterbox"),
+            "reference_image_url": input_reference_url,
+        }
+        # Persist minimal API request preview
+        outputs_patch["openai_sora_request"] = {
+            "model": video_job.model,
+            "seconds": video_job.seconds,
+            "size": video_job.size,
+            "has_reference": bool(input_reference_url),
+            "prompt_preview": prompt if len(prompt) <= 400 else (prompt[:400] + "…"),
+        }
+    except Exception:
+        pass
     if raw_video_path and raw_video_path != final_video_path:
         outputs_patch["openai_sora_video_raw"] = str(raw_video_path)
     if narration_path:

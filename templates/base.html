@@ -124,7 +124,8 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="logo">🧭</div>
-        <div>Moderator <span class="muted">/ {{ session.get('user')[0]|upper }}{{ session.get('user')[1:] }}</span></div>
+        {% set _u = session.get('user') %}
+        <div>Moderator <span class="muted">/ {{ (_u[0]|upper ~ _u[1:]) if _u else 'guest' }}</span></div>
       </div>
       {% include 'menu.html' %}
     </aside>

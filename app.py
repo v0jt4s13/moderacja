@@ -17,11 +17,20 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024
 
 from news_to_video.routes import news_to_video_bp
-from price_compare.routes import price_compare_bp
 from materialy_reklamowe import materialy_reklamowe_bp
+from webutils.routes import webutils_bp
 app.register_blueprint(news_to_video_bp)
-app.register_blueprint(price_compare_bp)
 app.register_blueprint(materialy_reklamowe_bp)
+app.register_blueprint(webutils_bp)
+
+try:
+    from price_compare.routes import price_compare_bp
+except:
+    pass
+try:
+    app.register_blueprint(price_compare_bp)
+except:
+    pass
 
 @app.template_filter('datetimeformat')
 def datetimeformat(value, format='%Y-%m-%d %H:%M:%S'):
@@ -71,6 +80,11 @@ def login():
         return render_template("login.html", error="Nieprawidłowe dane logowania")
 
     return render_template("login.html")
+
+@app.route("/help")
+def help():
+    # Publiczna pomoc: przekieruj do /webutils/man
+    return redirect(url_for("webutils.show_manuals"))
 
 @app.errorhandler(500)
 def forbidden(e):

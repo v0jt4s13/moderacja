@@ -8,7 +8,6 @@ from datetime import datetime
 from pathlib import Path
 from flask import request, Blueprint, render_template_string, render_template, abort, jsonify, redirect
 
-from logging_config import LOG_DIR
 from loggers import webutils_routes_logger
 
 from auth import login_required
@@ -17,7 +16,10 @@ from webutils.debug_utils import printLog
 from webutils.view_file import is_allowed_file, is_path_allowed
 from webutils.function import analyze_file
 from webutils.messages import send_telegram_message
-from config import HOME_DIR, BASE_DIR, ALLOWED_EXTENSIONS, ALLOWED_LOGS_DIR, ALLOWED_LOGS_DIRS
+from config import BASE_DIR, ALLOWED_EXTENSIONS, LOGS_DIR_PATH
+# Fallbacks for logging paths if not explicitly configured
+ALLOWED_LOGS_DIR = LOGS_DIR_PATH
+ALLOWED_LOGS_DIRS = [ALLOWED_LOGS_DIR]
 
 webutils_bp = Blueprint('webutils', __name__, url_prefix="/webutils")
 
@@ -292,7 +294,7 @@ def show_logs():
         parsed_data=parsed_data,
         current_time=now,
         selected_file=selected_file,
-        log_dir=LOG_DIR,
+        log_dir=ALLOWED_LOGS_DIR,
         log_path=log_path,
         result=result,
         entries=entries

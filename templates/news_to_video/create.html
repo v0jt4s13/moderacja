@@ -69,6 +69,7 @@
     }
     .btn.secondary{ background:#203247; color:#cfe4ff; }
     .btn.warn{ background:var(--warn); color:#111; }
+    .field-error { border-color: #dc2626 !important; box-shadow: 0 0 0 2px rgba(220,38,38,.18); }
     .pill{ display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#1a2535; color:#cfe4ff; border:1px solid #253448; }
     details{ background:#0f1724; border:1px dashed #27415f; border-radius:10px; padding:10px 12px; }
     details > summary{ cursor:pointer; color:#cde; font-weight:700; }
@@ -116,7 +117,8 @@
     #loaderOverlay {
       position: fixed;
       inset: 0;
-      background: rgba(255,255,255,.9);
+      color: #eee;
+      background: #504d4de6;
       display: none; /* pokazywany po submit */
       align-items: center;
       justify-content: center;
@@ -159,12 +161,11 @@
         <div class="card" style="grid-column:1 / -1">
           <h2>Utwórz wideo <span class="pill" id="profile-pill">format: 16:9</span></h2>
           <div class="body">
-            <div class="row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
-              <div>
-                <label for="project-name">Nazwa/ID projektu</label>
-                <input id="project-name" type="text" placeholder="np. landowska-2025-09-21" />
-              </div>
-              <div>
+              <div class="row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
+                <div>
+                  <label for="project-name">Nazwa/ID projektu</label>
+                  <input id="project-name" type="text" placeholder="np. landowska-2025-09-21" />
+                </div>
                 <label for="renderer">Renderer</label>
                 <select id="renderer">
                   <option value="local" class="important">local</option>
@@ -172,14 +173,6 @@
                   <option value="openai_sora">OpenAI Sora (OpenAI video)</option>
                   <option value="openshot" class="tested">OpenShot Cloud API (self-hosted)</option>
                 </select>
-              </div>
-              <div>
-                <label for="fps">FPS</label>
-                <input id="fps" type="number" min="12" max="60" value="25" />
-              </div>
-              <div>
-                <label for="duration">Długość [s]</label>
-                <input id="duration" type="number" min="1" step="0.1" placeholder="auto" />
               </div>
             </div>
 
@@ -368,31 +361,37 @@
                 <div class="row" style="grid-template-columns: 1fr;">
                   <label><input id="sub-burn" type="checkbox" checked /> Wypal napisy (burn-in)</label>
                 </div>
-                <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
+                <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column: 1 / -1;">
+                  <label>Logo URL
+                    <input id="logo-url" type="text" placeholder="https://.../logo.png" />
+                  </label>            
+                <!-- <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
                   <div>
                     <label for="logo-url">Logo URL</label>
                     <input id="logo-url" type="text" placeholder="https://.../logo.png" />
+                  </div> -->
+                  <div class="fieldset-inputs-flex-row">
+                    <label for="logo-position">Pozycja logo
+                      <select id="logo-position">
+                        <option value="top-left">top-left</option>
+                        <option value="top-right" selected>top-right</option>
+                        <option value="bottom-left">bottom-left</option>
+                        <option value="bottom-right">bottom-right</option>
+                      </select>
+                    </label>
+                  <!-- </div>
+                  <div> -->
+                    <label for="logo-opacity">Przezroczystość (0–1)
+                      <input id="logo-opacity" type="number" step="0.05" min="0" max="1" value="0.85" />
+                    </label>
+                  <!-- </div>
+                  <div> -->
+                    <label for="logo-scale">Skala logo (0.05–0.3)
+                      <input id="logo-scale" type="number" step="0.01" min="0.05" max="0.3" value="0.15" />
+                    </label>
                   </div>
-                  <div>
-                    <label for="logo-position">Pozycja logo</label>
-                    <select id="logo-position">
-                      <option value="top-left">top-left</option>
-                      <option value="top-right" selected>top-right</option>
-                      <option value="bottom-left">bottom-left</option>
-                      <option value="bottom-right">bottom-right</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="logo-opacity">Przezroczystość (0–1)</label>
-                    <input id="logo-opacity" type="number" step="0.05" min="0" max="1" value="0.85" />
-                  </div>
-                </div>
-                <div class="row" style="grid-template-columns: 1fr;">
-                  <div>
-                    <label for="logo-scale">Skala logo (0.05–0.3)</label>
-                    <input id="logo-scale" type="number" step="0.01" min="0.05" max="0.3" value="0.15" />
-                  </div>
-                </div>
+                </fieldset>
+
                 <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
                   <div>
                     <label><input id="xfade-use" type="checkbox" checked /> Przejścia (crossfade)</label>
@@ -419,9 +418,10 @@
 
             <div class="footer-actions">
               <button type="button" class="btn" id="validateBtn" formnovalidate>Sprawdź wymagane pola</button>
+              <button type="button" id="healthBtn" class="btn secondary" formnovalidate>Sprawdź środowisko</button>
               <button type="button" class="btn" id="submitBtn">Renderuj</button>
             </div>
-
+              
             <div id="status" class="help" style="margin-top:10px"></div>
           </div>
         </div>
@@ -494,6 +494,31 @@
   const $ = (sel, root=document) => root.querySelector(sel);
   const val = (id) => (document.getElementById(id)?.value || '').trim();
   const REMOTE_RENDERERS = new Set(['shotstack', 'json2video', 'mediaconvert', 'openshot', 'openai_sora']);
+  // Map default Sora size from selected output format
+  function defaultSoraSizeForFormat(fmt){
+    fmt = String(fmt||'').toLowerCase();
+    if (fmt === '16x9') return '1280x720';
+    if (fmt === '9x16') return '720x1280';
+    if (fmt === '1x1')  return '1024x1024';
+    return '1280x720';
+  }
+  // Helpers: Sora preflight for reference image vs requested size
+  const parseSize = (s) => {
+    if (!s || typeof s !== 'string') return null;
+    const m = s.trim().match(/^(\d+)x(\d+)$/i);
+    if (!m) return null;
+    const w = parseInt(m[1], 10), h = parseInt(m[2], 10);
+    if (!w || !h) return null; return {w, h};
+  };
+  const getImageSize = (url) => new Promise((resolve, reject) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+    img.onerror = () => resolve(null);
+    // avoid credentials leak; size should be readable without CORS for most hosts
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+  });
   // --- scrapowanie strony i wypełnienie formularza ---
   const scrapBtn = document.getElementById('scrapBtn');
   const scrapUrlInput = document.getElementById('scrap-url-scrapUrl');
@@ -501,6 +526,7 @@
   const createForm = document.getElementById('createForm'); 
   const submitBtn = document.getElementById('submitBtn'); 
   const statusBox = document.getElementById('status');
+  const healthBtn = document.getElementById('healthBtn');
 
   const LOADER_MESSAGES = {
     queue: 'Zlecam renderowanie… proszę czekać.',
@@ -636,11 +662,24 @@
     }
   }
 
+  function setFieldError(id, msg){
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('field-error');
+    if (msg) el.title = msg; else el.removeAttribute('title');
+  }
+  function clearFieldError(id){
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('field-error');
+    el.removeAttribute('title');
+  }
+
   function requireFields() {
     const errors = [];
     // if(!val('project-name')) errors.push('Nazwa/ID projektu');
     const r = val('renderer');
-    // TTS – wymagany głos narracji
+    // TTS - wymagany głos narracji
     const ttsVoice = (document.getElementById('tts-voice')?.value || '').trim();
     if (!ttsVoice) errors.push('Głos narracji (TTS voice)')
     // else alert(`ttsVoice==>${ttsVoice}`);
@@ -654,6 +693,18 @@
     } else if (r==='openai_sora') {
       const soraPrompt = (document.getElementById('sora-prompt-template')?.value || '').trim();
       if (!soraPrompt) errors.push('Prompt dla OpenAI Sora');
+    }
+    // Wyczyść poprzednie oznaczenia
+    ['video-src','image-src','tts-voice','ss-format','ss-width','ss-height','local-out-name'].forEach(clearFieldError);
+    // Oznacz brakujące pola
+    if(!val('video-src') && !val('image-src')){ setFieldError('video-src','Wymagany jest URL wideo lub obraz'); setFieldError('image-src','Wymagany jest URL wideo lub obraz'); }
+    if(!ttsVoice){ setFieldError('tts-voice','Wybierz głos narracji'); }
+    if(r==='shotstack'){
+      if(!val('ss-format')) setFieldError('ss-format','Wybierz format');
+      if(!val('ss-width')) setFieldError('ss-width','Podaj szerokość');
+      if(!val('ss-height')) setFieldError('ss-height','Podaj wysokość');
+    } else if (r==='local') {
+      if(!val('local-out-name')) setFieldError('local-out-name','Podaj nazwę pliku wyjściowego');
     }
     return errors;
   }
@@ -677,6 +728,48 @@
     }
     syncProfileDims();
     refreshPreviews();
+  }
+
+  // ---- Persist form state in localStorage ----
+  const FORM_STATE_KEY = 'news_to_video_create_form_v1';
+  function saveFormState(){
+    try{
+      const form = document.getElementById('createForm');
+      if (!form) return;
+      const data = {};
+      for (const el of Array.from(form.elements)){
+        if (!el || !el.name && !el.id) continue;
+        const key = el.id || el.name;
+        const tag = (el.tagName||'').toLowerCase();
+        const type = (el.type||'').toLowerCase();
+        if (type === 'password') continue; // nie zapisujemy haseł
+        if (type === 'checkbox') data[key] = !!el.checked;
+        else if (type === 'radio') { if (el.checked) data[key] = el.value; }
+        else data[key] = (el.value ?? '').toString();
+      }
+      localStorage.setItem(FORM_STATE_KEY, JSON.stringify(data));
+    }catch(e){ console.warn('saveFormState:', e); }
+  }
+  function loadFormState(){
+    try{
+      const raw = localStorage.getItem(FORM_STATE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      const form = document.getElementById('createForm');
+      if (!form || !data) return;
+      for (const el of Array.from(form.elements)){
+        if (!el || !el.name && !el.id) continue;
+        const key = el.id || el.name;
+        if (!(key in data)) continue;
+        const type = (el.type||'').toLowerCase();
+        if (type === 'checkbox') el.checked = !!data[key];
+        else if (type === 'radio') { if (el.value === data[key]) el.checked = true; }
+        else el.value = data[key];
+      }
+      // po odtworzeniu dopasuj UI i podglądy
+      toggleRendererUI();
+      refreshPreviews();
+    }catch(e){ console.warn('loadFormState:', e); }
   }
 
   async function scrapAndFill(){
@@ -892,10 +985,10 @@
   }
 
   // ---- events ----
-  ['project-name','renderer','format-select','fps','duration','video-src','image-src','audio-src','captions-src',
+  ['project-name','renderer','format-select','video-src','image-src','audio-src','captions-src',
     'ss-format','ss-width','ss-height','ss-callback','ss-font-family','ss-font-size','ss-font-color','ss-stroke',
     'ss-stroke-width','ss-bg','ss-bg-opacity','local-out-name','local-burn-captions'].forEach(id=>{
-    const el = document.getElementById(id); if(el) el.addEventListener('input', refreshPreviews);
+    const el = document.getElementById(id); if(el){ el.addEventListener('input', ()=>{ refreshPreviews(); saveFormState(); }); }
   });
   $('#renderer').addEventListener('change', toggleRendererUI);
   $('#format-select').addEventListener('change', syncProfileDims);
@@ -909,6 +1002,44 @@
     if (errs.length) { $('#status').innerHTML = '<span class="err">Brak wymaganych pól:</span> '+errs.join(', '); }
     else { $('#status').innerHTML = '<span class="ok">OK — minimalny zestaw danych jest kompletny.</span>'; }
   });
+
+  async function checkHealthForSubmit(){
+    try{
+      const r = val('renderer');
+      const ttsVoice = (document.getElementById('tts-voice')?.value || '').trim();
+      // tylko przypadki wymagające ffmpeg (local, lub sora z lektorem)
+      const needsFfmpeg = (r==='local') || (r==='openai_sora' && !!ttsVoice);
+      if (!needsFfmpeg) return {ok:true};
+      const res = await fetch('{{ url_for("news_to_video.api_health") }}', {cache:'no-store'});
+      if (!res.ok) return {ok:false, msg:'Błąd sprawdzania środowiska (HTTP '+res.status+').'};
+      const h = await res.json();
+      if (!h.ffmpeg){ return {ok:false, msg:'Brak ffmpeg w PATH — wymagane do mux audio/wideo.'}; }
+      return {ok:true};
+    }catch(e){ return {ok:false, msg: 'Błąd sprawdzania środowiska: '+(e?.message||'nieznany')}; }
+  }
+
+  // Healthcheck środowiska (ffmpeg, API keys)
+  healthBtn?.addEventListener('click', async () => {
+    try{
+      const res = await fetch('{{ url_for("news_to_video.api_health") }}', {cache:'no-store'});
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      const h = await res.json();
+      const lines = [];
+      lines.push(`<b>ffmpeg</b>: ${h.ffmpeg ? 'OK' : '<span class="err">BRAK</span>'}`);
+      lines.push(`<b>OpenAI API Key</b>: ${h.openai_api_key ? 'OK' : '<span class=\"warn\">brak</span>'}`);
+      const g = h.google_tts||{}; lines.push(`<b>Google TTS</b>: ${g.ok ? 'OK' : '<span class=\"warn\">brak</span>'}${g.creds_file ? ' ('+g.creds_file+')' : ''}`);
+      const a = h.azure_tts||{}; lines.push(`<b>Azure TTS</b>: ${(a.key && a.region) ? 'OK' : '<span class=\"warn\">brak</span>'}`);
+      const s = h.s3||{}; lines.push(`<b>S3</b>: ${(s.bucket && s.region) ? 'OK' : '<span class=\"warn\">brak</span>'}`);
+      setStatusMessage(lines.join(' <span class="muted">|</span> '));
+    }catch(e){ setStatusMessage('<span class="err">Błąd healthcheck:</span> '+(e?.message||'nieznany')); }
+  });
+
+  // global listeners for persistence
+  createForm?.addEventListener('input', saveFormState);
+  createForm?.addEventListener('change', saveFormState);
+
+  // Restore on load
+  loadFormState();
 
   $('#submitBtn').addEventListener('click', async (event)=>{
     console.log('pressed submitBtn');
@@ -924,6 +1055,10 @@
       $('#status').innerHTML = '<span class="err">Uzupełnij najpierw:</span> '+errs.join(', ')+''; 
       return; 
     }
+
+    // Healthcheck blokujący, jeśli renderer wymaga ffmpeg
+    const hc = await checkHealthForSubmit();
+    if (!hc.ok){ setStatusMessage('<span class="err">'+hc.msg+'</span>'); return; }
 
     const manifest = buildManifest();
 
@@ -965,6 +1100,23 @@
       submitBtn.textContent = 'Renderuję…';
       setStatusMessage('Wysyłam żądanie renderowania…');
       toggleLoaderOverlay(true, LOADER_MESSAGES.queue);
+
+      // Preflight: OpenAI Sora inpainting requires reference image size == requested size
+      try {
+        const r = manifest?.payload?.renderer?.type;
+        const cfg = manifest?.payload?.renderer?.config || {};
+        if (r === 'openai_sora' && cfg.reference_image_url && cfg.size) {
+          const fit = (cfg.ref_image_fit || 'letterbox').toLowerCase();
+          const req = parseSize(cfg.size);
+          const got = await getImageSize(cfg.reference_image_url);
+          if (fit === 'match_image' && req && got && got.width && got.height && (got.width !== req.w || got.height !== req.h)) {
+            // Auto-adjust the requested size to match the reference image dims
+            cfg.size = `${got.width}x${got.height}`;
+            manifest.payload.renderer.config = cfg;
+            console.info(`[Sora] Adjusted size to match reference image: ${cfg.size}`);
+          }
+        }
+      } catch (e) { console.warn('Sora preflight failed (continuing):', e); }
 
       let projectId = manifest.project_id || null;
 
@@ -1361,7 +1513,8 @@
           api_key: ($('#sora-api-key')?.value || '').trim(),
           model: $('#sora-model')?.value || 'sora-2',
           seconds: $('#sora-seconds')?.value || '8',
-          size: $('#sora-size')?.value || '1280x720',
+          size: defaultSoraSizeForFormat($('#format-select')?.value),
+          ref_image_fit: $('#sora-ref-fit')?.value || 'letterbox',
           prompt_template: $('#sora-prompt-template')?.value || '',
           style_notes: $('#sora-style-notes')?.value || '',
           extra_instructions: $('#sora-extra-instructions')?.value || '',

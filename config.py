@@ -35,6 +35,8 @@ TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 RESULTS_DIR = os.path.join(BASE_DIR, "results")
 LOGS_DIR_PATH = os.path.join(BASE_DIR, "logs")
+# HOME_DIR moce by7 przekazany w .env (../data_settings/.env) lub b9dzie domyblnie ustawiony na katalog domowy ucytkownika
+HOME_DIR = os.getenv("HOME_DIR") or str(Path.home())
 ENDPOINT_DOMAIN = "https://londynek.net"
 
 print(f'DATA_FILES_DIR = {DATA_FILES_DIR}')
@@ -45,7 +47,7 @@ print(f'LOGS_DIR_PATH = {LOGS_DIR_PATH}')
 print(f'ENDPOINT_DOMAIN = {ENDPOINT_DOMAIN}')
 
 SITE_BASE = "https://londynek.net"
-TELEGRAM_MSG_SEND = False #True
+TELEGRAM_MSG_SEND = os.getenv("TELEGRAM_MSG_SEND", "0").strip().lower() in ("1", "true", "yes", "on")
 DEFAULT_MODEL_VERSION = "gpt-4.1-mini"
 EXTRA_MODEL_VERSION = "gpt-4.1-mini"
 

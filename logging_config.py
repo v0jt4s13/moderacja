@@ -4,11 +4,17 @@ import sys
 import logging
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
-import pwd
-import grp
+try:
+    import pwd  # Unix only
+    import grp  # Unix only
+except Exception:
+    pwd = None  # type: ignore
+    grp = None  # type: ignore
 import stat as statmod
 
 from config import ALLOWED_LOGS_DIR
+# Backwards-compat alias for modules expecting LOG_DIR
+LOG_DIR = ALLOWED_LOGS_DIR
 
 # Kolory ANSI
 GREY = "\x1b[38;20m"
@@ -47,6 +53,8 @@ def setup_logger(logger_name: str, log_file: str, level=logging.INFO) -> logging
         log_path,
         maxBytes=1_000_000,
         backupCount=5,
+        encoding="utf-8",
+        errors="replace",
     )
     formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
     handler.setFormatter(formatter)
@@ -54,6 +62,12 @@ def setup_logger(logger_name: str, log_file: str, level=logging.INFO) -> logging
 
     # opcjonalnie loguj też na stderr w dev
     if os.getenv("LOG_TO_STDERR", "0") == "1":
+        try:
+            # Ensure Windows consoles don’t choke on Unicode symbols (e.g., emojis)
+            if hasattr(sys.stderr, "reconfigure"):
+                sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
         sh = logging.StreamHandler()
         sh.setFormatter(formatter)
         logger.addHandler(sh)

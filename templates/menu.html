@@ -166,7 +166,7 @@ body.dark-mode .nav-item a.active{
           </li>
         </ul>
       </li>
-      <li class="nav-item">
+      <li class="nav-item" style="display:none">
         <a class="{% if request.path.startswith('/price-compare') %}active{% endif %}" href="{{ url_for('price_compare.index') }}">
           🛒 Porównanie cen
         </a>

@@ -385,7 +385,7 @@ def _list_media_under_prefix(s3, bucket: str, prefix: str, region: str) -> List[
     return items
 
 
-def fetch_gallery_entries(locations: List[str]) -> List[Dict[str, Any]]:
+def fetch_gallery_entries(locations: List[str], page: int = 1, per_page: int = 24) -> List[Dict[str, Any]]:
     """
     Dla podanych adresów S3 zwraca listę zasobów do wykorzystania w galerii.
     """
@@ -430,8 +430,44 @@ def fetch_gallery_entries(locations: List[str]) -> List[Dict[str, Any]]:
             else:
                 entry["prefix"] = prefix
 
-            entry["items"] = items
-            entry["count"] = len(items)
+            total = len(items)
+            # Oblicz stronicowanie (1-based)
+            page = max(1, int(page or 1))
+            per_page = max(1, int(per_page or 24))
+            start = (page - 1) * per_page
+            end = start + per_page
+            entry["items"] = items[start:end]
+            entry["count"] = total
+            entry["page"] = page
+            entry["per_page"] = per_page
+            entry["pages"] = (total + per_page - 1) // per_page if total else 1
+
+            # Lista pod-folderów (CommonPrefixes) dla łatwego przeglądania
+            try:
+                folder_prefix = entry.get("prefix") or prefix
+                folders = _s3_list_common_prefixes(s3, bucket, folder_prefix)
+                entry["folders"] = folders
+                # Zbuduj URL-e folderów, preferując domenę z oryginalnego wejścia (jeśli HTTP/S),
+                # w przeciwnym razie użyj domyślnej bazy S3 (bucket/region lub VIDEO_S3_BASE_URL)
+                base_url = None
+                _loc = (loc or "").strip()
+                if _loc.startswith("http://") or _loc.startswith("https://"):
+                    _p = urlparse(_loc)
+                    base_url = f"{_p.scheme}://{_p.netloc}"
+                else:
+                    base_url = _s3_env_base_url(bucket, region)
+
+                folder_infos = []
+                for fkey in folders:
+                    # Uniknij podwójnych //
+                    furl = f"{base_url}/{fkey.lstrip('/')}"
+                    folder_infos.append({"key": fkey, "url": furl})
+                entry["folders_info"] = folder_infos
+                if folders and not items:
+                    entry["warning"] = (entry.get("warning") or "") + (" " if entry.get("warning") else "") + f"Znaleziono {len(folders)} podfolderów."
+            except Exception as _:
+                entry["folders"] = []
+                entry["folders_info"] = []
 
             if not items:
                 entry["warning"] = "Brak rozpoznanych plików graficznych lub wideo pod wskazanym prefiksem."
@@ -442,10 +478,18 @@ def fetch_gallery_entries(locations: List[str]) -> List[Dict[str, Any]]:
     return results
 
 def _s3_env_bucket(s3_bucket=None) -> Optional[str]:
-    return VIDEO_S3_BUCKET or s3_bucket or None
+    """Resolve S3 bucket name from multiple env sources.
+
+    Prefer explicit `VIDEO_S3_BUCKET` used by news_to_video. If not set,
+    fall back to the more generic `AWS_S3_BUCKET` used in other modules,
+    or the provided `s3_bucket` argument.
+    """
+    return (VIDEO_S3_BUCKET or os.getenv("AWS_S3_BUCKET") or s3_bucket or None)
 
 def _s3_ready() -> bool:
-    return callable(s3_session) and bool(_s3_env_bucket())
+    # s3_session is always callable; check that some bucket is configured
+    # either via VIDEO_S3_BUCKET or AWS_S3_BUCKET.
+    return bool(_s3_env_bucket())
 
 def _s3_key_for_local(abs_path: str) -> Optional[str]:
     """

@@ -50,6 +50,15 @@ from news_to_video.render_video import (
     start_render_async
 )
 from news_to_video.renders_engines.shotstack import validate_shotstack_form, build_shotstack_timeline, SHOTSTACK_FALLBACK_LUMA, SHOTSTACK_FALLBACK_OVERLAY
+from news_to_video.main import (
+    find_project_dir,
+    segment_text,
+    synthesize_tts,
+    generate_srt,
+    generate_ass_from_timeline,
+    RenderProfile,
+    TTSSettings
+)
 
 news_to_video_bp = Blueprint(
     "news_to_video",
@@ -134,6 +143,8 @@ def index_html():
                 "mp4_9x16_rel": rel916,
                 "preview_rel": preview_rel,
                 "payload": payload,
+                "sora_prompt": outputs.get("openai_sora_prompt"),
+                "sora_config": outputs.get("openai_sora_config"),
             })
     projects.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     
@@ -192,6 +203,8 @@ def index_list_html():
                 "mp4_9x16_rel": rel916,
                 "preview_rel": preview_rel,
                 "payload": payload,
+                "sora_prompt": outputs.get("openai_sora_prompt"),
+                "sora_config": outputs.get("openai_sora_config"),
             })
     projects.sort(key=lambda x: x.get("created_at", ""), reverse=True)
     
@@ -417,6 +430,8 @@ def detail_html(project_id: str):
         abort(404)
 
     mp4_rel = mp4_1x1_rel = mp4_9x16_rel = srt_rel = audio_rel = ""
+    brand_rel = ""
+    brand_http = ""
 
     rel_count = 0
     outs = manifest.get("outputs", {}) or {}
@@ -453,6 +468,21 @@ def detail_html(project_id: str):
         except Exception:
             audio_rel = ""
 
+    # Brand logo URL (local or http)
+    try:
+        brand = (manifest.get("payload") or {}).get("brand") or {}
+        logo_path = brand.get("logo_path") or ""
+        if isinstance(logo_path, str) and logo_path.strip():
+            if logo_path.startswith("http://") or logo_path.startswith("https://"):
+                brand_http = logo_path
+            else:
+                try:
+                    brand_rel = _as_relpath(logo_path)
+                except Exception:
+                    brand_rel = ""
+    except Exception:
+        pass
+
     return render_template(
         "news_to_video/detail.html",
         manifest=manifest,
@@ -462,6 +492,8 @@ def detail_html(project_id: str):
         mp4_9x16_rel=mp4_9x16_rel,
         srt_rel=srt_rel,
         audio_rel=audio_rel,
+        brand_rel=brand_rel,
+        brand_http=brand_http,
     )
 
 # -----------------------------
@@ -547,6 +579,87 @@ def serve_file(relpath: str):
     filename = os.path.basename(abs_path)
     return send_from_directory(directory, filename, as_attachment=False)
 
+# -----------------------------
+# Re-render helpers (Sora same config, audio-only)
+# -----------------------------
+@news_to_video_bp.post("/rerender/sora/<project_id>")
+@login_required(role=["admin", "redakcja", "moderator","tester"])
+def rerender_sora_same_config(project_id: str):
+    pdir = find_project_dir(project_id)
+    if not pdir:
+        abort(404)
+    mpath = os.path.join(pdir, "manifest.json")
+    m = load_json(mpath) or {}
+    outs = m.get("outputs", {}) or {}
+    sora_cfg = outs.get("openai_sora_config")
+    if not sora_cfg:
+        return jsonify({"error": "Brak zapisanej konfiguracji Sora w outputs."}), 400
+
+    # Podstaw renderer Sora z zapisanym configiem
+    payload = m.get("payload") or {}
+    payload["renderer"] = {"type": "openai_sora", "config": sora_cfg}
+    m["payload"] = payload
+    save_json(mpath, m)
+
+    # Asynchroniczny render
+    start_render_async(pdir)
+    return redirect(url_for("news_to_video.detail_html", project_id=project_id))
+
+
+@news_to_video_bp.post("/audio-only/<project_id>")
+@login_required(role=["admin", "redakcja", "moderator","tester"])
+def generate_audio_only(project_id: str):
+    pdir = find_project_dir(project_id)
+    if not pdir:
+        abort(404)
+    mpath = os.path.join(pdir, "manifest.json")
+    m = load_json(mpath) or {}
+    payload = m.get("payload") or {}
+    text = (payload.get("text") or "").strip()
+    tts_cfg = payload.get("tts") or {}
+    if not text or not isinstance(tts_cfg, dict) or not tts_cfg.get("voice"):
+        return jsonify({"error": "Brak tekstu lub głosu TTS w payload."}), 400
+
+    # TTS
+    segments = segment_text(text)
+    audio_dir = os.path.join(pdir, "audio")
+    os.makedirs(audio_dir, exist_ok=True)
+    # Składamy TTSSettings z dictu
+    tts = TTSSettings(**tts_cfg)
+    audio_path, timeline = synthesize_tts(segments, tts, audio_dir)
+
+    # Napisy
+    out_dir = os.path.join(pdir, "outputs")
+    os.makedirs(out_dir, exist_ok=True)
+    srt_path = os.path.join(out_dir, "captions.srt")
+    ass_path = os.path.join(out_dir, "captions.ass")
+    profile_dims = RenderProfile()
+    try:
+        # jeśli było już wideo z Sory, dopasuj rozmiar
+        size = (m.get("outputs", {}) or {}).get("openai_sora_meta", {}).get("size") or "1280x720"
+        w, h = map(int, str(size).lower().split("x"))
+        profile_dims.width = w
+        profile_dims.height = h
+    except Exception:
+        pass
+    try:
+        generate_srt(timeline, srt_path)
+        generate_ass_from_timeline(timeline, profile_dims, ass_path, max_words=5, min_chunk_dur=0.7)
+    except Exception:
+        srt_path = None
+        ass_path = None
+
+    # Zapisz do manifestu outputs
+    m.setdefault("outputs", {})
+    m["outputs"]["audio"] = audio_path
+    if srt_path:
+        m["outputs"]["srt"] = srt_path
+    if ass_path:
+        m["outputs"]["ass"] = ass_path
+    save_json(mpath, m)
+
+    return redirect(url_for("news_to_video.detail_html", project_id=project_id))
+
 # [MODIFY] — trasa kasowania: korzysta z usuwania lokalnego z zabezpieczeniem S3
 @news_to_video_bp.post("/delete/<project_id>")
 @login_required(role=["admin", "redakcja", "moderator","tester"])
@@ -612,6 +725,38 @@ def api_status(project_id: str):
                     "outputs": outs,
                 })
     return jsonify({"error": "project not found"}), 404
+
+@news_to_video_bp.get("/api/health")
+@login_required(role=["admin", "redakcja", "moderator","tester"])
+def api_health():
+    """Prosty healthcheck środowiska — przydatny do walidacji w UI create.
+    Sprawdza obecność ffmpeg oraz kluczowych zmiennych środowiskowych.
+    """
+    import subprocess, shutil
+    def has_ffmpeg():
+        try:
+            # szybki test — preferuj shutil.which
+            if shutil.which("ffmpeg"):
+                return True
+            subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3)
+            return True
+        except Exception:
+            return False
+    openai_key = bool(os.getenv("OPENAI_API_KEY"))
+    google_creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    google_ok = bool(google_creds and os.path.isfile(google_creds))
+    azure_key = bool(os.getenv("AZURE_SPEECH_KEY") or os.getenv("AZURE_TTS_KEY"))
+    azure_region = bool(os.getenv("AZURE_REGION") or os.getenv("AZURE_TTS_REGION"))
+    s3_bucket = bool(os.getenv("VIDEO_S3_BUCKET") or os.getenv("AWS_S3_BUCKET"))
+    s3_region = bool(os.getenv("S3_REGION"))
+    return jsonify({
+        "ok": True,
+        "ffmpeg": has_ffmpeg(),
+        "openai_api_key": openai_key,
+        "google_tts": {"creds_file": google_creds or "", "ok": google_ok},
+        "azure_tts": {"key": azure_key, "region": azure_region},
+        "s3": {"bucket": s3_bucket, "region": s3_region},
+    })
 
 @news_to_video_bp.post("/scrap_page")
 @login_required(role=["admin", "redakcja", "moderator","tester"])

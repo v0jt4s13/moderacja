@@ -7,7 +7,7 @@
       <label>OpenAI API Key (opcjonalnie, zostaw puste aby użyć OPENAI_API_KEY)
         <input id="sora-api-key" type="text" name="sora_api_key" placeholder="sk-..." />
       </label>
-      <div class="row" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:10px;">
+      <div class="row" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px;">
         <label>Model
           <select id="sora-model" name="sora_model">
             <option value="sora-2" selected>sora-2 (domyślny)</option>
@@ -21,14 +21,7 @@
             <option value="12">12 s</option>
           </select>
         </label>
-        <label>Rozdzielczość
-          <select id="sora-size" name="sora_size">
-            <option value="1280x720" selected>1280×720 (16:9 landscape)</option>
-            <option value="1792x1024">1792×1024 (16:9 hi-res)</option>
-            <option value="720x1280">720×1280 (9:16 vertical)</option>
-            <option value="1024x1792">1024×1792 (9:16 hi-res)</option>
-          </select>
-        </label>
+        <!-- Rozdzielczość sterowana automatycznie przez wybór "Format wynikowy" -->
       </div>
     </fieldset>
 
@@ -55,6 +48,13 @@ Source article: {article_url}.</textarea>
       <legend>Referencje graficzne</legend>
       <label>URL grafiki referencyjnej
         <input id="sora-reference-image" type="text" name="sora_reference_image_url" placeholder="https://.../image.jpg" />
+      </label>
+      <label>Dopasowanie obrazu referencyjnego
+        <select id="sora-ref-fit" name="sora_ref_fit">
+          <option value="letterbox" selected>Letterbox (bez przycięcia)</option>
+          <option value="crop">Crop (przytnij do proporcji)</option>
+          <option value="match_image">Dopasuj rozdzielczość do obrazu</option>
+        </select>
       </label>
       <label style="display:flex;align-items:center;gap:10px;margin-top:10px;">
         <input id="sora-use-article-cover" type="checkbox" name="sora_use_article_cover" />
