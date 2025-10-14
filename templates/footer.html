@@ -1,13 +1,18 @@
-<div style="display:flex; gap:16px; flex-wrap: wrap;">
+<!-- <div style="display:flex; gap:16px; flex-wrap: wrap;">
   <a href="">❓ Pomoc</a>
   <a href="">📘 Dokumentacja</a>
   <a href="">✉️ Kontakt</a>
   <a href="">🔏 Prywatność</a>
   <span class="muted">© {{ now().year if now else (current_year or 2025) }} • Wszystkie prawa zastrzeżone</span>
-</div>
+</div> -->
 
 <footer>
-  <div>
+  <div style="display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    flex-direction: row;
+    padding-right: 20px;">
     {% if session.get('role') == 'admin' %}
       <a href="/webutils/files">📂 Pliki</a>
       <a href="/webutils/logs">📜 Logi</a>
