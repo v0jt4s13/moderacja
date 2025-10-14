@@ -180,7 +180,8 @@ def render_video_local(project_dir: str, profile: Optional[RenderProfile] = None
 
     payload = manifest.get("payload", {})
 
-    text = payload.get("text", "")
+    # Prefer explicit narration script when provided to keep VO and visuals aligned
+    text = payload.get("narration_script") or payload.get("text", "")
     tts_cfg = payload.get("tts", {}) or {}
     tts = TTSSettings(**tts_cfg) if isinstance(tts_cfg, dict) else TTSSettings()
     if not tts.voice:
@@ -315,22 +316,34 @@ def render_video_local(project_dir: str, profile: Optional[RenderProfile] = None
                 news_to_video_logger.info(f"[render_video_local] Concatenated (cut) -> {visuals_raw}")
 
         # 6) Branding + (opcjonalny) burn-in napisów — użyj ASS (limit 5 słów)
-        visuals_fx = os.path.join(out_dir, f"video_visuals_fx_{fmt_key}.mp4")
-        _apply_branding_and_subtitles(
-            visuals_raw,
-            ass_path if burn_subs else None,
-            branding if (branding.logo_path or burn_subs) else None,
-            p,
-            visuals_fx
-        )
-        news_to_video_logger.info(f"[render_video_local] Branding/subtitles applied -> {visuals_fx} (burn_in={burn_subs})")
+        visuals_fx = visuals_raw
+        if branding.logo_path or burn_subs:
+            fx_path = os.path.join(out_dir, f"video_visuals_fx_{fmt_key}.mp4")
+            applied = _apply_branding_and_subtitles(
+                visuals_raw,
+                ass_path if burn_subs else None,
+                branding if (branding.logo_path or burn_subs) else None,
+                p,
+                fx_path
+            )
+            if applied:
+                visuals_fx = fx_path
+                news_to_video_logger.info(f"[render_video_local] Branding/subtitles applied -> {fx_path} (burn_in={burn_subs})")
+            else:
+                news_to_video_logger.warning(
+                    "[render_video_local] Branding/subtitles failed for %s (burn_in=%s); falling back to raw visuals",
+                    fmt_key, burn_subs
+                )
 
         print('\n\n\t\t\* * * * * 👍 START make a video from components * * * * * ')
         print('\t\t\* * * * * 👍 START make a video from components * * * * * ')
         print('\t\t\* * * * * 👍 START make a video from components * * * * * \n\n')
         # 7) Mux (scalanie klipow) audio (bez -shortest; video nie krótsze od audio)
         mp4_path = os.path.join(out_dir, f"output_{fmt_key}.mp4")
-        _mux_video_audio(visuals_fx, audio_path, p, mp4_path)
+        if not _mux_video_audio(visuals_fx, audio_path, p, mp4_path):
+            msg = f"mux failed for {fmt_key} (expected {mp4_path})"
+            news_to_video_logger.error("[render_video_local] %s", msg)
+            raise RuntimeError(msg)
         vdur = _ffprobe_duration(mp4_path) or audio_duration
         durations_for_min.append(vdur)
         news_to_video_logger.info(f"[render_video_local] MUX done -> {mp4_path} duration={vdur:.2f}s")

@@ -50,7 +50,10 @@
 - Brak modułu `price_compare`: repo zawiera szablony, ale brak modułu Pythona. Jeśli otrzymasz błąd importu przy starcie:
   - Tymczasowo wyłącz ten moduł komentując 2 linie w `app.py:20` oraz `app.py:23` (`from price_compare.routes import price_compare_bp` i `app.register_blueprint(price_compare_bp)`).
 - Biblioteki TTS/S3: jeśli nie chcesz ich używać, ale import nadal się nie powiódł, sprawdź czy zainstalowałeś paczki z punktu 2).
-- `ffmpeg`: wymagany przez `pydub` dopiero przy operacjach na audio/wideo. Do samego startu serwera nie jest konieczny.
+- `ffmpeg`: wymagany przy operacjach na audio/wideo (np. przez `pydub` i lokalny renderer). Aplikacja potrafi znaleźć ffmpeg także poza PATH — możesz ustawić:
+  - `FFMPEG_EXE` (pełna ścieżka do `ffmpeg.exe`/`ffmpeg`)
+  - `FFPROBE_EXE` (pełna ścieżka do `ffprobe.exe`/`ffprobe`)
+  Jeśli zmienne nie są ustawione, aplikacja spróbuje wykryć ffmpeg/ffprobe w typowych lokalizacjach (Windows: `C:\ffmpeg\bin`, `C:\ProgramData\chocolatey\bin`, itp.) i w PATH.
 - Uprawnienia do logów: pliki logów są zapisywane w `logs/` w katalogu projektu. Katalog jest tworzony automatycznie.
  - Windows i moduł `pwd`: `pwd`/`grp` są częścią biblioteki standardowej tylko na Linux/macOS. Na Windows nie instaluje się ich przez pip. Kod jest dostosowany, aby nie wymagać `pwd` na Windows (patrz poprawka w `logging_config.py`). Funkcja `/webutils/logs` może nadal wymagać dostosowania na Windows.
 - Błąd `ModuleNotFoundError: No module named 'pyaudioop'`:
@@ -67,4 +70,4 @@
 
 8) Dalsza konfiguracja (opcjonalnie)
 - Integracje chmurowe (S3, Google/Azure/OpenAI TTS) wymagają odpowiednich kluczy środowiskowych jak wyżej oraz często dodatkowych plików konfiguracyjnych (np. `GOOGLE_APPLICATION_CREDENTIALS` do pliku JSON z kontem usługi).
-- Jeśli korzystasz z funkcji audio/wideo, doinstaluj `ffmpeg` (np. `choco install ffmpeg` na Windows lub `sudo apt-get install -y ffmpeg` na Debian/Ubuntu).
+- Jeśli korzystasz z funkcji audio/wideo, doinstaluj `ffmpeg` (np. `choco install ffmpeg` na Windows lub `sudo apt-get install -y ffmpeg` na Debian/Ubuntu). Alternatywnie ustaw `FFMPEG_EXE`/`FFPROBE_EXE` na lokalną instalację bez dodawania do PATH.

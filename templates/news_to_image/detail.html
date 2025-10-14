@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Podgląd projektu obrazów{% endblock %}
+{% block header %}Podgląd wygenerowanych obrazów{% endblock %}
+
+{% block content %}
+<style>
+  .nti-meta {
+    display: grid;
+    gap: 10px;
+    margin-bottom: 24px;
+    background: #11111170;
+    padding: 18px;
+    border-radius: 12px;
+  }
+  .nti-meta b { color: #f3f3f3; }
+  .nti-images {
+    display: grid;
+    gap: 24px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  }
+  .nti-card {
+    background: #11111170;
+    padding: 16px;
+    border-radius: 12px;
+  }
+  .nti-card img {
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 12px;
+  }
+  .nti-card pre {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-size: 0.9rem;
+  }
+</style>
+
+<div class="nti-meta">
+  <div><b>ID projektu:</b> {{ manifest.project_id }}</div>
+  <div><b>Status:</b> {{ manifest.status }}</div>
+  <div><b>Silnik:</b> {{ manifest.engine }}</div>
+  <div><b>Źródło:</b>
+    {% if manifest.source_url %}
+      <a href="{{ manifest.source_url }}" target="_blank" rel="noopener">{{ manifest.source_url }}</a>
+    {% else %}
+      brak
+    {% endif %}
+  </div>
+</div>
+
+<div class="nti-meta">
+  <div><b>Tytuł artykułu:</b> {{ manifest.article.title }}</div>
+  <div><b>Tekst/skrót:</b></div>
+  <pre>{{ manifest.article.text }}</pre>
+</div>
+
+<div class="nti-images">
+  {% for item in manifest.outputs %}
+    <div class="nti-card">
+      {% if item.serve_url %}
+        <img src="{{ item.serve_url }}" alt="Obraz {{ loop.index }}">
+      {% else %}
+        <div>Brak pliku</div>
+      {% endif %}
+      <b>Prompt:</b>
+      <pre>{{ item.prompt }}</pre>
+    </div>
+  {% endfor %}
+</div>
+
+<div style="margin-top: 24px;">
+  <a class="button" href="{{ url_for('news_to_image.create_form') }}">&larr; Nowy projekt</a>
+  <a class="button" href="{{ url_for('news_to_image.projects_list') }}" style="margin-left: 12px;">Lista projektów</a>
+</div>
+{% endblock %}

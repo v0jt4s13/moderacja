@@ -33,6 +33,9 @@ from news_to_video.main import (
     TTSSettings,
     RenderProfile,
     _mux_video_audio,
+    _apply_branding_and_subtitles,
+    BrandConfig,
+    _run,
 )
 
 
@@ -59,7 +62,7 @@ def _shorten_text(text: str, max_chars: int = 900) -> str:
     if len(body) <= max_chars:
         return body
     clipped = body[: max_chars - 1].rsplit(" ", 1)[0]
-    return clipped.rstrip() + "…"
+    return clipped.rstrip() + "..."
 
 
 def _extract_key_points(text: str, limit: int = 3) -> str:
@@ -68,19 +71,19 @@ def _extract_key_points(text: str, limit: int = 3) -> str:
     if not selected and text:
         selected = [_shorten_text(text, 120)]
     if not selected:
-        return "  • brak danych"
-    return "\n".join(f"  • {s}" for s in selected)
-
+        return "  - brak danych"
+    return "\n".join(f"  - {s}" for s in selected)
 
 def _build_prompt(manifest: Dict[str, Any], config: Dict[str, Any]) -> str:
     payload = manifest.get("payload") or {}
     template = (config.get("prompt_template") or DEFAULT_PROMPT_TEMPLATE).strip()
-
-    summary = _shorten_text(payload.get("text", ""))
+    # Prefer explicit narration script when present to keep Sora visuals aligned with voiceover
+    base_text = (payload.get("narration_script") or payload.get("text") or "")
+    summary = _shorten_text(base_text)
     prompt_context = {
         "title": payload.get("title") or manifest.get("title") or "",
         "summary": summary,
-        "key_points": _extract_key_points(payload.get("text", "")),
+        "key_points": _extract_key_points(base_text),
         "article_url": manifest.get("source_url") or payload.get("source_url") or "",
     }
 
@@ -105,8 +108,29 @@ def _build_prompt(manifest: Dict[str, Any], config: Dict[str, Any]) -> str:
     if avoid:
         additions.append(f"Avoid showing: {avoid}")
 
+    # Branding info (if provided in payload.brand) - textual guidance for Sora
+    try:
+        brand = (payload.get("brand") or {}) if isinstance(payload, dict) else {}
+        logo_path = (brand.get("logo_path") or "").strip()
+        position = (brand.get("position") or "top-right").strip()
+        opacity = brand.get("opacity") if brand.get("opacity") is not None else 0.85
+        scale = brand.get("scale") if brand.get("scale") is not None else 0.15
+        if logo_path:
+            additions.append(
+                "Branding: place the provided logo in the frame as a small, unobtrusive overlay "
+                f"(logo URL: {logo_path}; position: {position}; opacity≈{opacity}; scale≈{scale})."
+            )
+    except Exception:
+        pass
+
     if additions:
         base_prompt = base_prompt + "\n\n" + "\n".join(additions)
+
+    # Sanitize control characters that could confuse the model (e.g., BEL from earlier helpers)
+    try:
+        base_prompt = base_prompt.replace("\x07", "...")
+    except Exception:
+        pass
 
     return base_prompt
 
@@ -244,7 +268,7 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
     news_to_video_logger.info(
         "[openai_sora] Prompt prepared (len=%d)\n%s",
         len(prompt),
-        prompt if len(prompt) <= 800 else prompt[:800] + "…"
+        prompt if len(prompt) <= 800 else prompt[:800] + "..."
     )
 
     input_reference_url = _pick_reference_image(renderer_cfg, payload)
@@ -318,7 +342,7 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
             "model": model,
             "seconds": seconds,
             "size": size,
-            "prompt_preview": prompt if len(prompt) <= 400 else prompt[:400] + "…",
+            "prompt_preview": prompt if len(prompt) <= 400 else prompt[:400] + "...",
             "has_reference": bool(input_file),
         }
         news_to_video_logger.info("[openai_sora] API request payload => %s", payload_preview)
@@ -365,7 +389,8 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
     srt_path = None
     ass_path = None
     try:
-        text = (payload.get("text") or "").strip()
+        # Use narration_script when provided; fallback to payload.text
+        text = (payload.get("narration_script") or payload.get("text") or "").strip()
         tts_cfg = payload.get("tts") or {}
         if text and isinstance(tts_cfg, dict) and tts_cfg.get("voice"):
             segments = segment_text(text)
@@ -401,7 +426,33 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
                     srt_path = None
                     ass_path = None
 
-                # mux audio + video
+                # Przygotuj branding/napisy przed mux (jeśli są i włączone w configu)
+                post_branding_enabled = bool(renderer_cfg.get("post_branding", True))
+                brand_cfg = (payload.get("brand") or {}) if isinstance(payload, dict) else {}
+                branding = BrandConfig(**brand_cfg) if isinstance(brand_cfg, dict) else None
+                subs_path = str(ass_path) if ass_path else (str(srt_path) if srt_path else None)
+
+                base_for_mux = str(video_path)
+                if post_branding_enabled and (branding or subs_path):
+                    try:
+                        # Odtwórz profil wymiarów z rozmiaru joba
+                        prof = RenderProfile()
+                        try:
+                            w, h = map(int, (video_job.size or "1280x720").lower().split("x"))
+                            prof.width = w; prof.height = h
+                        except Exception:
+                            pass
+                        branded_noaudio = outputs_dir / f"{video_path.stem}_branded.mp4"
+                        ok_brand = _apply_branding_and_subtitles(str(video_path), subs_path, branding, prof, str(branded_noaudio))
+                        if ok_brand:
+                            base_for_mux = str(branded_noaudio)
+                            news_to_video_logger.info("[openai_sora] Branded base prepared -> %s", branded_noaudio)
+                        else:
+                            news_to_video_logger.warning("[openai_sora] Branding step failed, using raw Sora video as base")
+                    except Exception as exc_b:
+                        news_to_video_logger.warning("OpenAI Sora: branding failed: %s", exc_b)
+
+                # mux audio + video (narration)
                 try:
                     mux_profile = RenderProfile()
                     try:
@@ -411,7 +462,7 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
                     except Exception:
                         pass
                     muxed_path = outputs_dir / f"{video_path.stem}_with_audio.mp4"
-                    if _mux_video_audio(str(video_path), narration_path, mux_profile, str(muxed_path)):
+                    if _mux_video_audio(base_for_mux, narration_path, mux_profile, str(muxed_path)):
                         raw_video_path = video_path
                         final_video_path = muxed_path
                         news_to_video_logger.info("[openai_sora] Video muxed with narration -> %s", muxed_path)
@@ -426,6 +477,57 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
         narration_path = None
         srt_path = None
         ass_path = None
+
+    # Jeśli nie generowaliśmy narracji - nałóż branding zachowując oryginalne audio
+    if narration_path is None:
+        try:
+            post_branding_enabled = bool(renderer_cfg.get("post_branding", True))
+            brand_cfg = (payload.get("brand") or {}) if isinstance(payload, dict) else {}
+            has_brand = bool(brand_cfg.get("logo_path"))
+            subs_path = str(ass_path) if ('ass_path' in locals() and ass_path) else (str(srt_path) if ('srt_path' in locals() and srt_path) else None)
+            if post_branding_enabled and (has_brand or subs_path):
+                prof = RenderProfile()
+                try:
+                    w, h = map(int, (video_job.size or "1280x720").lower().split("x"))
+                    prof.width = w; prof.height = h
+                except Exception:
+                    pass
+                # Zbuduj filter_complex podobny do _apply_branding..., ale zachowaj audio 0:a?
+                fc_parts = []
+                mapsrc = "[0:v]"
+                inputs = ["-y", "-i", str(video_path)]
+                if has_brand:
+                    inputs += ["-i", str(brand_cfg.get("logo_path"))]
+                    logo_w = max(32, int(prof.width * float(brand_cfg.get("scale") or 0.15)))
+                    margin = 24
+                    pos = (str(brand_cfg.get("position") or "top-right").lower())
+                    x_expr = f"main_w-w-{margin}" if "right" in pos else f"{margin}"
+                    y_expr = f"main_h-h-{margin}" if "bottom" in pos else f"{margin}"
+                    opacity = float(brand_cfg.get("opacity") or 0.85)
+                    fc_parts.append(f"[1:v]scale={logo_w}:-1,format=rgba,colorchannelmixer=aa={opacity:.2f}[lg]")
+                    fc_parts.append(f"{mapsrc}[lg]overlay=x={x_expr}:y={y_expr}:format=auto[vlg]")
+                    mapsrc = "[vlg]"
+                if subs_path:
+                    from_path = subs_path.replace("\\", "\\\\").replace(":", r"\:").replace("'", r"\'").replace(",", r"\,")
+                    fc_parts.append(f"{mapsrc}subtitles='{from_path}'[vout]")
+                    mapsrc = "[vout]"
+                filter_complex = ";".join(fc_parts)
+                branded_with_audio = outputs_dir / f"{video_path.stem}_branded_audio.mp4"
+                cmd = [
+                    "ffmpeg", *inputs,
+                    "-filter_complex", filter_complex,
+                    "-map", mapsrc, "-map", "0:a?",  # zachowaj oryginalny dźwięk jeśli był
+                    "-c:v", "libx264", "-preset", "medium", "-pix_fmt", "yuv420p",
+                    "-c:a", "aac", "-b:a", "192k",
+                    str(branded_with_audio)
+                ]
+                cmd_str = " ".join(shlex.quote(str(x)) for x in cmd)
+                ok, _ = _run(cmd_str)
+                if ok and os.path.exists(branded_with_audio):
+                    final_video_path = branded_with_audio
+                    news_to_video_logger.info("[openai_sora] Branded video (with original audio) -> %s", branded_with_audio)
+        except Exception as exc_b2:
+            news_to_video_logger.warning("OpenAI Sora: post-branding failed: %s", exc_b2)
 
     thumbnail_path = None
     if renderer_cfg.get("save_thumbnail"):
@@ -463,7 +565,7 @@ def render_via_openai_sora(project_dir: str, profile: Optional[Any] = None) -> D
             "seconds": video_job.seconds,
             "size": video_job.size,
             "has_reference": bool(input_reference_url),
-            "prompt_preview": prompt if len(prompt) <= 400 else (prompt[:400] + "…"),
+            "prompt_preview": prompt if len(prompt) <= 400 else (prompt[:400] + "..."),
         }
     except Exception:
         pass

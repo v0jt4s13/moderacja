@@ -25,6 +25,7 @@ import math
 import mimetypes
 import boto3
 from io import BytesIO
+from ffmpeg_resolver import get_ffmpeg_exe, get_ffprobe_exe
 
 from loggers import news_to_video_logger
 from news_to_video.renders_engines.s3_proc import ( 
@@ -743,15 +744,26 @@ def update_manifest_payload(project_dir: str, payload_updates: Dict):
 
 
 def _run(cmd: str) -> Tuple[bool, str]:
-    """Run shell command, return (ok, stderr_out)."""
-    proc = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    """Run shell command, return (ok, stderr_out).
+    Transparently replaces leading 'ffmpeg'/'ffprobe' with resolved paths.
+    """
+    tokens = shlex.split(cmd)
+    if tokens:
+        if tokens[0] == "ffmpeg":
+            tokens[0] = get_ffmpeg_exe()
+        elif tokens[0] == "ffprobe":
+            tokens[0] = get_ffprobe_exe()
+    proc = subprocess.run(tokens, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     return proc.returncode == 0, proc.stderr.decode("utf-8", "ignore")
 
 
 def _ffprobe_duration(path: str) -> float:
-    """Return duration in seconds using ffprobe."""
+    """Return duration in seconds using ffprobe (resolver-aware)."""
     cmd = f"ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 {shlex.quote(path)}"
-    proc = subprocess.run(shlex.split(cmd), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    tokens = shlex.split(cmd)
+    if tokens and tokens[0] == "ffprobe":
+        tokens[0] = get_ffprobe_exe()
+    proc = subprocess.run(tokens, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
         return float(proc.stdout.decode().strip())
     except Exception:

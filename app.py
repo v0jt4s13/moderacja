@@ -6,6 +6,17 @@ from markupsafe import Markup
 from flask import Flask, render_template, request, session, redirect, url_for, abort, send_from_directory
 from werkzeug.middleware.proxy_fix import ProxyFix
 from config import LOGS_DIR_PATH, get_config
+"""
+Ensure stdout/stderr won't crash on Unicode (e.g., emojis) on Windows consoles.
+We prefer UTF-8 with replacement to avoid UnicodeEncodeError in prints.
+"""
+try:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    if hasattr(sys.stderr, "reconfigure"):
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 get_config()
 
 from auth import login_required, log_entry_access 
@@ -17,9 +28,11 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_port=1)
 app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024
 
 from news_to_video.routes import news_to_video_bp
+from news_to_image import news_to_image_bp
 from materialy_reklamowe import materialy_reklamowe_bp
 from webutils.routes import webutils_bp
 app.register_blueprint(news_to_video_bp)
+app.register_blueprint(news_to_image_bp)
 app.register_blueprint(materialy_reklamowe_bp)
 app.register_blueprint(webutils_bp)
 

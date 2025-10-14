@@ -1,4 +1,4 @@
-<div class="card" style="grid-column:1 / -1;background:#0f1522;border:1px solid #233248;">
+<div class="card" style="grid-column:1 / -1;background:#061840;border:1px solid #233248;">
   <h2>OpenAI Sora — konfiguracja renderu</h2>
   <div class="body" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;">
 
@@ -28,10 +28,8 @@
     <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column:1 / -1;">
       <legend>Prompt i kontekst</legend>
       <label>Prompt (obsługuje placeholdery: {title}, {summary}, {key_points}, {article_url})
-        <textarea id="sora-prompt-template" name="sora_prompt_template" rows="6">Create a cinematic Polish-language news explainer video about "{title}".
-Use visuals that illustrate: {key_points}.
-Ensure the storyline can be understood nawet bez narracji – kadruj najważniejsze fakty.
-Source article: {article_url}.</textarea>
+        <textarea id="sora-prompt-template" name="sora_prompt_template" rows="6">Stwórz filmik informacyjny w języku polskim na temat "{title}". \n Użyj elementów wizualnych, które ilustrują: {key_points}. \n Upewnij się, że fabuła jest zrozumiała nawet bez narracji - przedstaw najważniejsze fakty. \n Artykuł źródłowy: {article_url}.</textarea>
+        <!-- <textarea id="sora-prompt-template" name="sora_prompt_template" rows="6">Create a cinematic Polish-language news explainer video about "{title}".\n Use visuals that illustrate: {key_points}. Ensure the storyline can be understood nawet bez narracji – kadruj najważniejsze fakty. Source article: {article_url}.</textarea> -->
       </label>
       <label>Uwagi stylistyczne (kamerowanie, światło, kolorystyka)
         <textarea id="sora-style-notes" name="sora_style_notes" rows="3" placeholder="np. Dynamiczny montage, ujęcia z drona, neonowe barwy nocnego miasta"></textarea>
@@ -63,6 +61,10 @@ Source article: {article_url}.</textarea>
       <label style="display:flex;align-items:center;gap:10px;margin-top:10px;">
         <input id="sora-save-thumbnail" type="checkbox" name="sora_save_thumbnail" checked />
         Zapisz także miniaturę (thumbnail) z wygenerowanego klipu.
+      </label>
+      <label style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+        <input id="sora-post-branding" type="checkbox" name="sora_post_branding" checked />
+        Wypal logo/napisy po renderze Sory (FFmpeg)
       </label>
       <div class="muted" style="margin-top:8px;">
         Jeśli podasz własny URL, będzie on użyty w pierwszej kolejności. Zaznaczenie opcji artykułu pozwala szybko

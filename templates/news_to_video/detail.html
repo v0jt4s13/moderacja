@@ -44,6 +44,8 @@
     .tag {
       font-size:12px;padding:4px 8px;border-radius:6px;background:#20a84b;
     }
+    .status-wrapper {display:flex;flex-direction:column;align-items:flex-start;gap:6px;}
+    .status-timer {font-size:12px;color:#bcd;}
     /* .status-badge{display:inline-block;padding:6px 10px;border-radius:999px;background:#f0f0f0;font-weight:600} */
     .status-queued{background:#f8dc81;color: #222;}
     .status-processing{background:#71a5f3}
@@ -105,9 +107,13 @@
   <h2>{{ manifest.title }}</h2>
   <div style="width:-webkit-fill-available;text-align:end;padding-bottom:15px;">
     <a class="button" style="display:inline;"
+        href="{{ url_for('news_to_video.index_html') }}">← lista lokalnych mediów</a>
+    <a class="button" style="display:inline;"
         href="{{ url_for('news_to_video.s3_media_html') }}">← S3: lista mediów</a>
     <a class="button" style="display:inline;"
-        href="{{ url_for('news_to_video.index_html') }}">← Projekty lokalne</a>
+        href="{{ url_for('news_to_video.create_form') }}">+ Nowy projekt</a>
+    <!-- <a class="button" style="display:inline;"
+        href="{{ url_for('news_to_video.index_html') }}">← Projekty lokalne</a> -->
 
     <form action="{{ url_for('news_to_video.update_project_view', project_id=manifest.project_id) }}"
           method="post" style="display:inline; background-color: transparent;"
@@ -178,10 +184,13 @@
               <tr>
                 <td class="metadata__key">Status</td>
                 <td class="metadata__value">
-                  <span class="badge text-primary bg-light">
-                    <div class="me-2 spinner-border spinner-border-sm text-secondary"></div>
-                    <span id="statusBadge" class="status-badge">–</span>
-                  </span>
+                  <div class="status-wrapper">
+                    <span class="badge text-primary bg-light">
+                      <div class="me-2 spinner-border spinner-border-sm text-secondary"></div>
+                      <span id="statusBadge" class="status-badge" data-created-at="{{ manifest.created_at or '' }}">{{ manifest.status or '-' }}</span>
+                    </span>
+                    <span id="statusTimer" class="status-timer"></span>
+                  </div>
                 </td>
               </tr>
               <tr>
@@ -243,6 +252,15 @@
                   <code>{{ manifest.payload.text }}</code>
                 </td>
               </tr>  
+
+              {% if manifest.payload.narration_script %}
+              <tr>
+                <td class="metadata__key">Narration Script</td>
+                <td class="metadata__value" colspan="2" style="text-align: left;">
+                  <pre class="manifest-payload-text">{{ manifest.payload.narration_script }}</pre>
+                </td>
+              </tr>
+              {% endif %}
               
               {% if manifest.payload.tts: %}
                 <tr>
@@ -378,7 +396,7 @@
   <div class="manifest-payload-wrap">
     <div class="manifest-payload">
       {% for key, val in manifest.payload.items(): %}
-        {% if key not in ['media','text','title','brand','formats','renderer','subtitles','tts','transitions']: %}
+        {% if key not in ['media','text','title','brand','formats','renderer','subtitles','tts','transitions','narration_script']: %}
             Nierozpoznane media:<br>
             {{ key }} ==> {{ val }}<hr>
         {% endif %}
@@ -459,29 +477,57 @@
 
 
 <script>
+  function formatDuration(ms){
+    ms = Math.max(0, Math.floor(ms));
+    const totalSec = Math.floor(ms / 1000);
+    const minutes = Math.floor(totalSec / 60);
+    const seconds = totalSec % 60;
+    return `${minutes}:${String(seconds).padStart(2,'0')}`;
+  }
+
   // Prosty polling statusu projektu i auto-odświeżenie po zakończeniu
   (function(){
+    const startTs = Date.parse('{{ manifest.created_at or '' }}') || Date.now();
+    const rendererType = {{ (manifest.payload.renderer.type if manifest.payload and manifest.payload.renderer else 'local') | tojson }};
+    let timeoutMs = 15 * 60 * 1000;
+    if (rendererType === 'openai_sora') timeoutMs = 45 * 60 * 1000;
+    else if (rendererType !== 'local') timeoutMs = Math.max(timeoutMs, 30 * 60 * 1000);
+
+    const badge = document.getElementById('statusBadge');
+    const timerEl = document.getElementById('statusTimer');
+
     const initialStatus = ({{ (manifest.status or '""') | tojson }} || '').toLowerCase();
-    let lastStatus = initialStatus;
+    let lastStatus = initialStatus || 'queued';
+
+    function updateMeta(status){
+      const now = Date.now();
+      const elapsed = now - startTs;
+      if (timerEl) timerEl.textContent = `Upłynęło: ${formatDuration(elapsed)}`;
+    }
+
+    updateMeta(lastStatus);
+
     async function poll(){
       try{
         const res = await fetch("{{ url_for('news_to_video.api_status', project_id=manifest.project_id) }}", {cache:'no-store'});
         if(!res.ok) return;
         const data = await res.json();
         const st = String(data.status||'').toLowerCase();
-        const badge = document.getElementById('statusBadge');
+        const prevStatus = lastStatus;
         if (badge && st){
           badge.textContent = st;
           badge.classList.remove('status-queued','status-processing','status-done','status-error');
           badge.classList.add('status-' + (st.replace(/[^a-z]/g,'')));
         }
-        if (lastStatus !== 'done' && st === 'done'){
-          // pełny reload, aby podpiąć nowe ścieżki wideo i linki
+        lastStatus = st || lastStatus;
+        updateMeta(lastStatus);
+        if (prevStatus !== 'done' && st === 'done'){
           window.location.reload();
         }
-        lastStatus = st;
       }catch(e){ /* ignore */ }
     }
+
+    setInterval(()=>updateMeta(lastStatus), 1000);
     setInterval(poll, 3000);
   })();
 </script>

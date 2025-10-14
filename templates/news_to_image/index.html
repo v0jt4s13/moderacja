@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Projekty – News → Image{% endblock %}
+{% block header %}Lista projektów obrazów{% endblock %}
+
+{% block content %}
+<style>
+  .nti-list {
+    display: grid;
+    gap: 16px;
+  }
+  .nti-card {
+    background: #11111170;
+    padding: 16px 20px;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .nti-card a {
+    color: #8fc7ff;
+  }
+  .nti-meta {
+    font-size: 0.95rem;
+    color: #bdbdbd;
+  }
+  .nti-status {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+  .nti-status.completed { background: #163b22; color: #70f19d; }
+  .nti-status.failed { background: #3b1b1b; color: #f06f6f; }
+  .nti-status.pending { background: #1c3455; color: #89baff; }
+  .nti-empty {
+    text-align: center;
+    padding: 40px;
+    background: #11111170;
+    border-radius: 12px;
+    color: #d0d0d0;
+  }
+</style>
+
+<div style="margin-bottom: 20px;">
+  <a class="button" href="{{ url_for('news_to_image.create_form') }}">+ Nowy projekt</a>
+</div>
+
+{% if projects %}
+  <div class="nti-list">
+    {% for project in projects %}
+      <div class="nti-card">
+        <div>
+          <strong>{{ project.title or project.article.title or project.project_id }}</strong>
+        </div>
+        <div class="nti-meta">
+          ID: {{ project.project_id }}<br>
+          Utworzono: {{ project.created_at }}
+        </div>
+        <div>
+          <span class="nti-status {{ project.status or 'pending' }}">{{ project.status or 'pending' }}</span>
+        </div>
+        <div>
+          <a href="{{ url_for('news_to_image.detail_view', project_id=project.project_id) }}">Podgląd projektu</a>
+        </div>
+        {% if project.source_url %}
+          <div class="nti-meta">
+            <a href="{{ project.source_url }}" target="_blank" rel="noopener">Źródło artykułu</a>
+          </div>
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+{% else %}
+  <div class="nti-empty">
+    Brak projektów – wygeneruj pierwszy zestaw obrazów.
+  </div>
+{% endif %}
+{% endblock %}

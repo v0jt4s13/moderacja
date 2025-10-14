@@ -615,7 +615,7 @@ def generate_audio_only(project_id: str):
     mpath = os.path.join(pdir, "manifest.json")
     m = load_json(mpath) or {}
     payload = m.get("payload") or {}
-    text = (payload.get("text") or "").strip()
+    text = (payload.get("narration_script") or payload.get("text") or "").strip()
     tts_cfg = payload.get("tts") or {}
     if not text or not isinstance(tts_cfg, dict) or not tts_cfg.get("voice"):
         return jsonify({"error": "Brak tekstu lub głosu TTS w payload."}), 400
@@ -733,15 +733,21 @@ def api_health():
     Sprawdza obecność ffmpeg oraz kluczowych zmiennych środowiskowych.
     """
     import subprocess, shutil
+    from ffmpeg_resolver import get_ffmpeg_exe
     def has_ffmpeg():
         try:
-            # szybki test — preferuj shutil.which
-            if shutil.which("ffmpeg"):
+            # Preferuj resolver (obsługa env i typowych lokalizacji)
+            ff = get_ffmpeg_exe()
+            if ff and (shutil.which(ff) or os.path.isfile(ff)):
+                subprocess.run([ff, "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3)
                 return True
-            subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3)
-            return True
+            # Fallback na PATH
+            if shutil.which("ffmpeg"):
+                subprocess.run(["ffmpeg", "-version"], stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=3)
+                return True
         except Exception:
-            return False
+            pass
+        return False
     openai_key = bool(os.getenv("OPENAI_API_KEY"))
     google_creds = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
     google_ok = bool(google_creds and os.path.isfile(google_creds))
@@ -1025,7 +1031,19 @@ PROMPTS = [
         "label": "5 tytułów (PL)",
         "system": "Jesteś redaktorem tytułów prasowych.",
         "user_prefix": "Zaproponuj 5 zwięzłych, nieclickbaitowych tytułów na podstawie danych.\n\nDANE:"
-    }
+    },
+    {
+        "id": "time_8sec",
+        "label": "Streszczenie PL (max 8 sekund)",
+        "system": "Jesteś asystentem, który tworzy zwięzłe streszczenia dopasowane do czasu odczytu maxymalnie 7 sekund. Streszczenie ma być w języku w jakim dostarczone zostały dane.",
+        "user_prefix": "Napisz streszczenie do artykułu tak aby przeczytane zmieściło się w 7 sekundach. Zachęć do kontaktu lub przeczytania całego artykułu na portalu londynek.net.\n\nDANE:"
+    },
+    {
+        "id": "time_12sec",
+        "label": "Streszczenie PL (max 12 sekund)",
+        "system": "Jesteś asystentem, który tworzy zwięzłe streszczenia dopasowane do czasu odczytu maxymalnie 11 sekund. Streszczenie ma być w języku w jakim dostarczone zostały dane.",
+        "user_prefix": "Napisz streszczenie do artykułu tak aby przeczytane zmieściło się w 11 sekundach. Zachęć do kontaktu lub przeczytania całego artykułu na portalu londynek.net.\n\nDANE:"
+    },
 ]
 
 def get_prompt_by_id(pid: str):

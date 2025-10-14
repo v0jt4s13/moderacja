@@ -176,6 +176,17 @@ body.dark-mode .nav-item a.active{
           🖼️ Materiały reklamowe
         </a>
       </li>
+      <li class="nav-item">
+        <button class="dropdown-btn">News -> Image</button>
+        <ul class="dropdown">
+          <li class="{% if request.path == url_for('news_to_image.create_form') %}active{% endif %}">
+            <a href="{{ url_for('news_to_image.create_form') }}">Generuj obrazy</a>
+          </li>
+          <li class="{% if request.path == url_for('news_to_image.projects_list') %}active{% endif %}">
+            <a href="{{ url_for('news_to_image.projects_list') }}">Lista projektów</a>
+          </li>
+        </ul>
+      </li>
       {% endif %}
 
     </ul>

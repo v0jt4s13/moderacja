@@ -1,2140 +1,2295 @@
-{% extends "base.html" %}
-
-{% block title %}Nowy projekt — News → Video — Create{% endblock %}
-
-{% block header %}News → Video — Create{% endblock %}
-
-{% block content %}
-
-  <pre>Video — Create v1.5</pre>
-  <style>
-    :root { --bg:#0b0f14; --panel:#121925; --muted:#9fb0c3; --accent:#4aa3ff; --ok:#1fbf75; --warn:#ffcc00; --err:#ff5a5a; }
-    body{ background:var(--bg); color:#e6eef7; font:15px/1.45 system-ui,Segoe UI,Roboto,Ubuntu; margin:0; }
-    .wrap{ max-width:1100px; margin:30px auto; padding:0 16px; }
-    h1{ font-size:22px; margin:6px 0 14px; }
-    .grid{ 
-      display:grid; 
-      grid-template-columns: 1fr 1fr; 
-      gap:16px; 
+{% extends "base.html" %}
+
+{% block title %}Nowy projekt — News → Video — Create{% endblock %}
+
+{% block header %}News → Video — Create{% endblock %}
+
+{% block content %}
+
+  <pre>Video — Create v1.5</pre>
+  <style>
+    :root { 
+      --bg:#0b0f14; 
+      --panel:#322d58; 
+      --renderer-panel:#44682661; 
+      --muted:#9fb0c3; 
+      --accent:#4aa3ff; 
+      --ok:#1fbf75; 
+      --warn:#ffcc00; 
+      --err:#ff5a5a; 
+    }
+    body{ background:var(--bg); color:#e6eef7; font:15px/1.45 system-ui,Segoe UI,Roboto,Ubuntu; margin:0; }
+    .wrap{ max-width:1100px; margin:30px auto; padding:0 16px; }
+    h1{ font-size:22px; margin:6px 0 14px; }
+    .grid{ 
+      display:grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap:16px; 
+    }
+    .grid-1{ 
+      display:grid; 
+      /* grid-template-columns: 1fr 1fr;  */
+      gap:16px; 
+    }
+    .card{ 
+        width: auto;
+        background:var(--panel); 
+        border:1px solid #1e2a3b; 
+        border-radius:14px; 
+        box-shadow:0 8px 24px #0006; 
+        margin: 10px 0px;
+    }
+    .card h2{ font-size:16px; margin:0; padding:12px 14px; border-bottom:1px solid #1e2a3b; color:#cfe4ff }
+    .card .body{ padding:14px; }
+    label{ 
+        background-color: transparent !important;
+        display:block; 
+        font-weight:600; 
+        color:#cde; 
+        margin:12px 0 6px; 
+    }
+    input[type="text"], input[type="number"], select, textarea{ 
+        width:100%; 
+        box-sizing:border-box; 
+        background:#0e1622 !important; 
+        color:#e9f2ff !important; 
+        border:1px solid #243244; 
+        border-radius:10px; 
+        padding:10px 12px; 
+        outline:none; 
+    }
+    input[type="checkbox"]{ 
+        transform:scale(1.2); 
+    }
+    .hidden-row {
+      display: none !important;
+    }
+    .row{ display:grid; grid-template-columns: repeat(12,1fr); gap:10px; align-items:center; }
+    .row > *{ min-width:150px; }
+    .btn{ 
+        appearance:none; 
+        background:var(--accent) !important; 
+        color:#001326 !important;
+        border:none; 
+        padding:10px 14px; 
+        border-radius:12px; 
+        font-weight:700; 
+        cursor:pointer; 
+    }
+    .btn.secondary{ background:#203247; color:#cfe4ff; }
+    .btn.warn{ background:var(--warn); color:#111; }
+    .field-error { border-color: #dc2626 !important; box-shadow: 0 0 0 2px rgba(220,38,38,.18); }
+    .pill{ display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#1a2535; color:#cfe4ff; border:1px solid #253448; }
+    details{ background:#0f1724; border:1px dashed #27415f; border-radius:10px; padding:10px 12px; }
+    details > summary{ cursor:pointer; color:#cde; font-weight:700; }
+    .muted{ color:var(--muted); font-weight:500; }
+    .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:10px; background:#142034; border:1px solid #21314a; }
+    .flex{ display:flex; gap:10px; align-items:center; }
+    .hidden{ display:none !important; }
+    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:13px; }
+    .footer-actions { 
+      display:flex; 
+      gap:10px; 
+      justify-content:flex-end; 
+      margin:16px; 
+    }
+    .help{ 
+      font-size:13px; 
+      color:#a9b9cc; 
+      margin: 10px;
+    }
+    .list{ margin:6px 0 0 18px; }
+    .ok{ color:var(--ok); }
+    .err{ color:var(--err); }
+    /* PREVIEW boxes */
+    .grid-previews {
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+      margin-top:14px;
+    }
+    .card-preview {
+      border:1px solid #eee;
+      border-radius:10px;
+      padding:10px 12px;
+      background:#fafafa;
+    }
+    .card-preview h3{
+      margin:6px 0 8px;
+      font-size:16px;
+    }
+    pre.codebox{
+      margin:0;
+      padding:10px;
+      background:#111;
+      color:#e8e8e8;
+      border-radius:8px;
+      max-height:360px;
+      overflow:auto;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      font-size:13px;
+      line-height:1.4;
+    }
+
+    /* Loader overlay */
+    #loaderOverlay {
+      position: fixed;
+      inset: 0;
+      color: #eee;
+      background: #504d4de6;
+      display: none; /* pokazywany po submit */
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+    .loader {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      border: 6px solid #ddd;
+      border-top-color: #111;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #loaderText { 
+      margin-top: 12px; 
+      color:#eee; 
+      font-weight:600; 
+      text-align:center; 
     }
-    .grid-1{ 
-      display:grid; 
-      /* grid-template-columns: 1fr 1fr;  */
-      gap:16px; 
-    }
-    .card{ 
-        width: auto;
-        background:var(--panel); 
-        border:1px solid #1e2a3b; 
-        border-radius:14px; 
-        box-shadow:0 8px 24px #0006; 
-        margin: 10px 0px;
-    }
-    .card h2{ font-size:16px; margin:0; padding:12px 14px; border-bottom:1px solid #1e2a3b; color:#cfe4ff }
-    .card .body{ padding:14px; }
-    label{ 
-        background-color: transparent !important;
-        display:block; 
-        font-weight:600; 
-        color:#cde; 
-        margin:12px 0 6px; 
-    }
-    input[type="text"], input[type="number"], select, textarea{ 
-        width:100%; 
-        box-sizing:border-box; 
-        background:#0e1622 !important; 
-        color:#e9f2ff !important; 
-        border:1px solid #243244; 
-        border-radius:10px; 
-        padding:10px 12px; 
-        outline:none; 
-    }
-    input[type="checkbox"]{ 
-        transform:scale(1.2); 
-    }
-    .hidden-row {
-      display: none !important;
-    }
-    .row{ display:grid; grid-template-columns: repeat(12,1fr); gap:10px; align-items:center; }
-    .row > *{ min-width:0; }
-    .btn{ 
-        appearance:none; 
-        background:var(--accent) !important; 
-        color:#001326 !important;
-        border:none; 
-        padding:10px 14px; 
-        border-radius:12px; 
-        font-weight:700; 
-        cursor:pointer; 
-    }
-    .btn.secondary{ background:#203247; color:#cfe4ff; }
-    .btn.warn{ background:var(--warn); color:#111; }
-    .field-error { border-color: #dc2626 !important; box-shadow: 0 0 0 2px rgba(220,38,38,.18); }
-    .pill{ display:inline-block; font-size:12px; padding:3px 8px; border-radius:999px; background:#1a2535; color:#cfe4ff; border:1px solid #253448; }
-    details{ background:#0f1724; border:1px dashed #27415f; border-radius:10px; padding:10px 12px; }
-    details > summary{ cursor:pointer; color:#cde; font-weight:700; }
-    .muted{ color:var(--muted); font-weight:500; }
-    .badge{ display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border-radius:10px; background:#142034; border:1px solid #21314a; }
-    .flex{ display:flex; gap:10px; align-items:center; }
-    .hidden{ display:none !important; }
-    .mono{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace; font-size:13px; }
-    .footer-actions{ display:flex; gap:10px; justify-content:flex-end; margin-top:16px; }
-    .help{ font-size:13px; color:#a9b9cc; }
-    .list{ margin:6px 0 0 18px; }
-    .ok{ color:var(--ok); }
-    .err{ color:var(--err); }
-    /* PREVIEW boxes */
-    .grid-previews {
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-      margin-top:14px;
-    }
-    .card-preview {
-      border:1px solid #eee;
-      border-radius:10px;
-      padding:10px 12px;
-      background:#fafafa;
-    }
-    .card-preview h3{
-      margin:6px 0 8px;
-      font-size:16px;
-    }
-    pre.codebox{
-      margin:0;
-      padding:10px;
-      background:#111;
-      color:#e8e8e8;
-      border-radius:8px;
-      max-height:360px;
-      overflow:auto;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      font-size:13px;
-      line-height:1.4;
-    }
-
-    /* Loader overlay */
-    #loaderOverlay {
-      position: fixed;
-      inset: 0;
-      color: #eee;
-      background: #504d4de6;
-      display: none; /* pokazywany po submit */
-      align-items: center;
-      justify-content: center;
-      z-index: 9999;
-    }
-    .loader {
-      width: 64px;
-      height: 64px;
-      border-radius: 50%;
-      border: 6px solid #ddd;
-      border-top-color: #111;
-      animation: spin 1s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    #loaderText { margin-top: 12px; color:#111; font-weight:600; text-align:center; }
-
-    /* Wyróżnienie ważnych opcji */
-    option.important {
-      background-color: #ffc107; /* Żółte tło dla wyróżnienia */
-      font-weight: bold; /* Pogrubienie tekstu */
-      color: #333;
-    }
-    /* Styl dla aktywne testy (wybranej) opcji */
-    option.tested {
-      background-color: #f71201;
-      color: white;
-    }
-
-    .fieldset-inputs-flex-row { display: flex;flex-direction: row;flex-wrap: wrap;justify-content: space-around; }
-    .fieldset-inputs-flex-row label {
-      width: 130px;
-      margin-right: 10px;
-    }
-  </style>
-
-  <div class="wrap">
-    <form id="createForm" method="post" enctype="multipart/form-data" novalidate>
-    <div class="grid">
-
-        <div class="card" style="grid-column:1 / -1">
-          <h2>Utwórz wideo <span class="pill" id="profile-pill">format: 16:9</span></h2>
-          <div class="body">
-              <div class="row" style="grid-template-columns: 2fr 1fr 1fr 1fr 1fr;">
-                <div>
-                  <label for="project-name">Nazwa/ID projektu</label>
-                  <input id="project-name" type="text" placeholder="np. landowska-2025-09-21" />
-                </div>
-                <label for="renderer">Renderer</label>
-                <select id="renderer">
-                  <option value="local" class="important">local</option>
-                  <option value="shotstack" class="important">shotstack</option>
-                  <option value="openai_sora">OpenAI Sora (OpenAI video)</option>
-                  <option value="openshot" class="tested">OpenShot Cloud API (self-hosted)</option>
-                </select>
-              </div>
-            </div>
-
-            <!-- Ustawienie specyficzne dla dostawcy / rendera -->
-            <div class="card" style="margin-top:12px;background:#0f1522;border:1px solid #233248;">
-              <h2>Ustawienia — <span class="badge"><span id="badge-renderer">local</span></span></h2>
-              <div class="body">
-                <div id="cfg-local">
-                  <label for="local-profile">Preset lokalny</label>
-                  <select id="local-profile">
-                    <option value="ffmpeg-basic">ffmpeg-basic</option>
-                    <option value="openshot-basic">openshot-basic</option>
-                  </select>
-                  <label for="local-out-name">Nazwa pliku wyjściowego</label>
-                  <input id="local-out-name" type="text" placeholder="output.mp4" />
-                  <label><input id="local-burn-captions" type="checkbox" /> Wypal napisy w obrazie</label>
-                </div>
-
-                <!-- <div id="renderer_fields">
-                  <div id="cfg-shotstack"></div>
-                </div> -->
-                <div id="cfg-shotstack">
-                  <div id="renderer_fields"></div>
-                </div>
-
-              </div>
-            </div>
-
-
-            <!-- sekcja scrapowania strony + wybór promptu -->
-            <div class="card" style="margin-top:12px;background:#0f1522;border:1px solid #233248;">
-              <div class="body">
-                <div class="scrap-url" style="display:grid;gap:12px;align-items:end;">
-
-                  <div lass="fieldset-inputs-flex-row">
-                    <!-- URL to scrap -->
-                    <fieldset class="half" style="border:1px solid #32465f;border-radius:10px;padding:14px;">
-                      <legend style="padding:0 8px;">Adres URL artykułu</legend>
-                      <label class="scrap-url">
-                        <input type="text" id="scrap-url-scrapUrl" placeholder="https://example.com/artykul..." value="https://londynek.net/wiadomosci/Brytyjska%20siec%20energetyczna%20zabezpieczona%20przed%20awariami.%20%26quot%3BNie%20ma%20szans%20na%20blackout%26quot%3B%2Cwiadomosci%2Cnews,/wiadomosci/article?jdnews_id=108013" />
-                        <div class="muted">Wklej link do artykułu i kliknij „Pobierz dane” — tytuł, streszczenie i media wypełnią formularz.</div>
-                      </label>
-                    </fieldset>
-
-                    <!-- AI Prompt -->
-                    <fieldset class="half" style="border:1px solid #32465f;border-radius:10px;padding:14px;">
-                      <legend style="padding:0 8px;">AI - gotowe prompty</legend>
-                      <label class="scrap-url">
-                        <select id="scrap-url-prompt_id" name="prompt_id">
-                          <option value="">— wybierz prompt —</option>
-                        </select>
-                      </label>
-                      <div id="prompt_hint" class="muted" style="margin-top:8px">
-                        Po wybraniu promptu i kliknięciu „Pobierz dane” tekst zostanie automatycznie przetworzony.
-                      </div>
-                    </fieldset>
-                  </div>
-
-                  <button id="scrapBtn" type="button" class="btn">Pobierz dane</button>
-                </div>
-              </div>
-            </div>
-
-            <!-- pola na tytuł/tekst/URL-e mediów dla audiotranskr. i dalszego przetwarzania -->
-            <details style="margin-top:10px" open>
-              <summary>Treść i media (tekst do TTS / lista URL)</summary>
-              <div class="row" style="grid-template-columns: 1fr; gap:6px; margin-top:8px;">
-                <div>
-                  <label for="title">Tytuł</label>
-                  <input id="title" name="title" type="text" placeholder="Tytuł artykułu" value="{{ test_data1 }}" />
-                </div>
-                <div>
-                  <label for="text">Treść (do audiotranskrypcji)</label>
-                  <textarea id="text" name="text" rows="5" placeholder="Tekst artykułu / skrypt lektorski">{{ test_data2 }}</textarea>
-                </div>
-                <div>
-                  <label for="media_urls">Lista URL mediów (po jednym w linii)</label>
-                  <textarea id="media_urls" name="media_urls" rows="4" placeholder="https://.../image.jpg
-  https://.../clip.mp4
-  https://.../audio.mp3
-  https://.../captions.srt">{{ test_data3 }}</textarea>
-                </div>
-              </div>
-            </details>
-
-            <details style="margin-top:10px">
-              <summary>Źródła mediów (min. 1 wideo lub obraz + audio)</summary>
-              <div class="row" style="grid-template-columns: 1fr 1fr 1fr 1fr; margin-top:10px;">
-                <div>
-                  <label for="video-src">URL wideo (główne tło)</label>
-                  <input id="video-src" type="text" placeholder="https://.../clip.mp4" />
-                </div>
-                <div>
-                  <label for="image-src">URL obrazu (alternatywa)</label>
-                  <input id="image-src" type="text" placeholder="https://.../image.jpg" value="{{ test_data4 }}" />
-                </div>
-                <div>
-                  <label for="audio-src">URL audio (muzyka/lektor)</label>
-                  <input id="audio-src" type="text" placeholder="https://.../audio.mp3" />
-                </div>
-                <div>
-                  <label for="captions-src">Napisy (SRT/VTT)</label>
-                  <input id="captions-src" type="text" placeholder="https://.../captions.srt" />
-                </div>
-              </div>
-              <div class="help">
-                Uwaga: dla <b>shotstack</b> minimalny JSON wymaga <span class="mono">timeline.tracks[].clips[].asset</span> (wideo lub obraz) oraz <span class="mono">output.format/size</span>. Napisy są opcjonalne, ale jeśli podasz URL — zostaną dołączone jako <span class="mono">asset.type = "caption"</span>.
-                <br><span>https://jdblayer-assets.s3.eu-west-2.amazonaws.com/londynek/video/tmp/newsroom-power-lines.mp4</span>
-              </div>
-            </details>
-
-            <!-- Prompt dla AI (opcjonalnie) -->
-            <details style="margin-top:10px">
-              <summary>Prompt dla AI (opcjonalnie)</summary>
-              <div class="row" style="grid-template-columns: 2fr 1fr; margin-top:10px;">
-                <div>
-                  <label for="prompt-select">Wybierz prompt</label>
-                  <select id="prompt-select"><option value="">— wybierz —</option></select>
-                </div>
-                <div style="align-self:end;">
-                  <button class="btn secondary" id="run-ai-promptBtn">Użyj promptu z danymi</button>
-                </div>
-              </div>
-              <label for="prompt-text">Albo wpisz własny</label>
-              <textarea id="prompt-text" rows="5" placeholder="Instrukcje dla modelu (np. wygeneruj listę ujęć, overlaye tekstowe, CTA)"></textarea>
-              <div class="help">Jeżeli formularz został zasilony danymi przez <span class="mono">scrap_page_view</span>, kliknięcie „Użyj promptu…” przekaże <span class="mono">system_prompt/user_prompt</span> do <span class="mono">ask_model_openai()</span> i wypełni szkic scenariusza.</div>
-            </details>
-
-  
-            <!-- TTS / Narracja -->
-            <div class="card" style="margin-top:12px;background:#0f1522;border:1px solid #233248;">
-              <h2>TTS / Narracja</h2>
-              <div class="body">
-                <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
-                  <div>
-                    <label for="tts-provider">Provider TTS</label>
-                      <select name="provider" id="tts-provider">
-                        <option value="google" {{ 'selected' if default_provider == 'google' else '' }}>Google</option>
-                        <option value="microsoft" {{ 'selected' if default_provider == 'microsoft' else '' }}>Microsoft</option>
-                      </select>
-                  </div>
-                  <div>
-                    <label for="tts-voice">Głos (voice)</label>
-                    <select name="voice" id="tts-voice">
-                      {% set ns = namespace(selected=false) %}
-                      {% for v in voices %}
-                        {% if v.startswith('---') %}
-                          <option value="">{{ v }}</option>
-                        {% elif not ns.selected %}
-                          <option value="{{ v }}" selected>{{ v }}</option>
-                          {% set ns.selected = true %}
-                        {% else %}
-                          <option value="{{ v }}">{{ v }}</option>
-                        {% endif %}
-                      {% endfor %}
-                    </select>
-                  </div>
-                  <div>
-                    <label for="tts-speed">Szybkość lektora</label>
-                    <input id="tts-speed" type="number" step="0.1" min="0.5" max="2.0" value="1.0" />
-                  </div>
-                </div>
-                <div class="row" style="grid-template-columns: 1fr;">
-                  <div>
-                    <label for="tts-lang">Język</label>
-                    <input id="tts-lang" type="text" value="pl" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Formatowanie / Efekty / Logo / Przejścia -->
-            <div class="card" style="margin-top:12px;background:#0f1522;border:1px solid #233248;">
-              <h2>Formaty / Efekty / Logo / Przejścia</h2>
-              <div class="body">
-                <div class="row" style="grid-template-columns: 1fr;">
-                  <div>
-                    <label for="format-select">Format wynikowy</label>
-                    <select id="format-select" name="formats">
-                      <option value="16x9" selected>16:9 (1920x1080)</option>
-                      <option value="1x1">1:1 (1080x1080)</option>
-                      <option value="9x16">9:16 (1080x1920)</option>
-                    </select>
-                  </div>
-                </div>
-                <div class="row" style="grid-template-columns: 1fr;">
-                  <label><input id="sub-burn" type="checkbox" checked /> Wypal napisy (burn-in)</label>
-                </div>
-                <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column: 1 / -1;">
-                  <label>Logo URL
-                    <input id="logo-url" type="text" placeholder="https://.../logo.png" />
-                  </label>            
-                <!-- <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
-                  <div>
-                    <label for="logo-url">Logo URL</label>
-                    <input id="logo-url" type="text" placeholder="https://.../logo.png" />
-                  </div> -->
-                  <div class="fieldset-inputs-flex-row">
-                    <label for="logo-position">Pozycja logo
-                      <select id="logo-position">
-                        <option value="top-left">top-left</option>
-                        <option value="top-right" selected>top-right</option>
-                        <option value="bottom-left">bottom-left</option>
-                        <option value="bottom-right">bottom-right</option>
-                      </select>
-                    </label>
-                  <!-- </div>
-                  <div> -->
-                    <label for="logo-opacity">Przezroczystość (0–1)
-                      <input id="logo-opacity" type="number" step="0.05" min="0" max="1" value="0.85" />
-                    </label>
-                  <!-- </div>
-                  <div> -->
-                    <label for="logo-scale">Skala logo (0.05–0.3)
-                      <input id="logo-scale" type="number" step="0.01" min="0.05" max="0.3" value="0.15" />
-                    </label>
-                  </div>
-                </fieldset>
-
-                <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
-                  <div>
-                    <label><input id="xfade-use" type="checkbox" checked /> Przejścia (crossfade)</label>
-                  </div>
-                  <div>
-                    <label for="xfade-transition">Typ przejścia</label>
-                    <select id="xfade-transition">
-                      <option value="fade" selected>fade</option>
-                      <option value="reveal">reveal</option>
-                      <option value="wipeLeft">wipeLeft</option>
-                      <option value="slideLeft">slideLeft</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label for="xfade-duration">Czas trwania (s)</label>
-                    <input id="xfade-duration" type="number" step="0.1" min="0.1" max="3" value="1.5" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-
-
-
-            <div class="footer-actions">
-              <button type="button" class="btn" id="validateBtn" formnovalidate>Sprawdź wymagane pola</button>
-              <button type="button" id="healthBtn" class="btn secondary" formnovalidate>Sprawdź środowisko</button>
-              <button type="button" class="btn" id="submitBtn">Renderuj</button>
-            </div>
-              
-            <div id="status" class="help" style="margin-top:10px"></div>
-          </div>
-        </div>
-
-
-    </div><div class="grid-1">
-
-      <div class="card">
-        <h2>Szkic payloadu</h2>
-        <div class="body">
-          <pre id="payloadPreview" class="mono" style="white-space:pre-wrap;">{ }</pre>
-        </div>
+    #loaderProgress { width:320px; height:10px; background:#4a4a4a; border-radius:999px; overflow:hidden; margin-top:10px; }
+    #loaderProgress .bar { width:0%; height:100%; background:#e6eef7; transition: width .4s ease; }
+    #loaderProgressText { margin-top:6px; color:#e6eef7; font-size:12px; text-align:center; }
+
+    /* Wyróżnienie ważnych opcji */
+    option.important {
+      background-color: #ffc107; /* Żółte tło dla wyróżnienia */
+      font-weight: bold; /* Pogrubienie tekstu */
+      color: #333;
+    }
+    /* Styl dla aktywne testy (wybranej) opcji */
+    option.tested {
+      background-color: #f71201;
+      color: white;
+    }
+
+    .fieldset-inputs-flex-row { display: flex;flex-direction: row;flex-wrap: wrap;justify-content: space-around; }
+    .fieldset-inputs-flex-row label {
+      width: 130px;
+      margin-right: 10px;
+    }
+  </style>
+
+  <div class="wrap">
+    <form id="createForm" method="post" enctype="multipart/form-data" novalidate>
+    <div class="grid">
+
+        <div class="card" style="grid-column:1 / -1">
+          <h2>Utwórz wideo <span class="pill" id="profile-pill">format: 16:9</span></h2>
+          <div class="body">
+              <div class="row" style="grid-template-columns: 1fr 1fr;">
+                <div>
+                  <label for="project-name">Nazwa/ID projektu
+                  <input id="project-name" type="text" placeholder="np. landowska-2025-09-21" />
+                </div>
+                <label for="renderer">Renderer
+                <select id="renderer">
+                  <option value="local" class="important">local</option>
+                  <option value="shotstack" class="important">shotstack</option>
+                  <option value="openai_sora">OpenAI Sora (OpenAI video)</option>
+                  <option value="openshot" class="tested">OpenShot Cloud API (self-hosted)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Ustawienie specyficzne dla dostawcy / rendera -->
+            <div class="card" style="margin-top:12px;background:var(--renderer-panel);border:1px solid #233248;">
+              <h2>Ustawienia — <span class="badge"><span id="badge-renderer">local</span></span></h2>
+              <div class="body">
+                <div id="cfg-local">
+                  <label for="local-profile">Preset lokalny</label>
+                  <select id="local-profile">
+                    <option value="ffmpeg-basic">ffmpeg-basic</option>
+                    <option value="openshot-basic">openshot-basic</option>
+                  </select>
+                  <label for="local-out-name">Nazwa pliku wyjściowego</label>
+                  <input id="local-out-name" type="text" placeholder="output.mp4" />
+                  <label><input id="local-burn-captions" type="checkbox" /> Wypal napisy w obrazie</label>
+                </div>
+
+                <!-- <div id="renderer_fields">
+                  <div id="cfg-shotstack"></div>
+                </div> -->
+                <div id="cfg-shotstack">
+                  <div id="renderer_fields"></div>
+                </div>
+
+              </div>
+            </div>
+
+
+            <!-- sekcja scrapowania strony + wybór promptu -->
+            <div class="card" style="margin-top:12px;background:#0f1522;border:1px solid #233248;">
+              <div class="body">
+                <div class="scrap-url" style="display:grid;gap:12px;align-items:end;">
+
+                  <div lass="fieldset-inputs-flex-row">
+                    <!-- URL to scrap -->
+                    <fieldset class="half" style="border:1px solid #32465f;border-radius:10px;padding:14px;">
+                      <legend style="padding:0 8px;">Adres URL artykułu</legend>
+                      <label class="scrap-url">
+                        <input type="text" id="scrap-url-scrapUrl" placeholder="https://example.com/artykul..." value="https://londynek.net/wiadomosci/Brytyjska%20siec%20energetyczna%20zabezpieczona%20przed%20awariami.%20%26quot%3BNie%20ma%20szans%20na%20blackout%26quot%3B%2Cwiadomosci%2Cnews,/wiadomosci/article?jdnews_id=108013" />
+                        <div class="muted">Wklej link do artykułu i kliknij „Pobierz dane” — tytuł, streszczenie i media wypełnią formularz.</div>
+                      </label>
+                    </fieldset>
+
+                    <!-- AI Prompt -->
+                    <fieldset class="half" style="border:1px solid #32465f;border-radius:10px;padding:14px;">
+                      <legend style="padding:0 8px;">AI - gotowe prompty</legend>
+                      <label class="scrap-url">
+                        <select id="scrap-url-prompt_id" name="prompt_id">
+                          <option value="">— wybierz prompt —</option>
+                        </select>
+                      </label>
+                      <div id="prompt_hint" class="muted" style="margin-top:8px">
+                        Po wybraniu promptu i kliknięciu „Pobierz dane” tekst zostanie automatycznie przetworzony.
+                      </div>
+                    </fieldset>
+                  </div>
+
+                  <button id="scrapBtn" type="button" class="btn">Pobierz dane</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- pola na tytuł/tekst/URL-e mediów dla audiotranskr. i dalszego przetwarzania -->
+            <details style="margin-top:10px" open>
+              <summary>Treść i media (tekst do TTS / lista URL)</summary>
+              <div class="row" style="grid-template-columns: 1fr; gap:6px; margin-top:8px;">
+                <div>
+                  <label for="title">Tytuł</label>
+                  <input id="title" name="title" type="text" placeholder="Tytuł artykułu" value="{{ test_data1 }}" />
+                </div>
+                <div>
+                  <label for="text">Treść (do audiotranskrypcji)</label>
+                  <textarea id="text" name="text" rows="5" placeholder="Tekst artykułu / skrypt lektorski">{{ test_data2 }}</textarea>
+                </div>
+                <div>
+                  <label for="media_urls">Lista URL mediów (po jednym w linii)</label>
+                  <textarea id="media_urls" name="media_urls" rows="4" placeholder="https://.../image.jpg
+  https://.../clip.mp4
+  https://.../audio.mp3
+  https://.../captions.srt">{{ test_data3 }}</textarea>
+                </div>
+              </div>
+            </details>
+
+            <details style="margin-top:10px">
+              <summary>Źródła mediów (min. 1 wideo lub obraz + audio)</summary>
+              <div class="row" style="grid-template-columns: 1fr 1fr 1fr 1fr; margin-top:10px;">
+                <div>
+                  <label for="video-src">URL wideo (główne tło)
+                    <input id="video-src" type="text" placeholder="https://.../clip.mp4" />
+                  </label>
+                </div>
+                <div>
+                  <label for="image-src">URL obrazu (alternatywa)
+                    <input id="image-src" type="text" placeholder="https://.../image.jpg" value="{{ test_data4 }}" />
+                  </label>
+                </div>
+                <div>
+                  <label for="audio-src">URL audio (muzyka/lektor)
+                    <input id="audio-src" type="text" placeholder="https://.../audio.mp3" />
+                  </label>
+                </div>
+                <div>
+                  <label for="captions-src">Napisy (SRT/VTT)</label>
+                    <input id="captions-src" type="text" placeholder="https://.../captions.srt" />
+                  </label>
+                </div>
+              </div>
+              <div class="help">
+                Uwaga: dla <b>shotstack</b> minimalny JSON wymaga <span class="mono">timeline.tracks[].clips[].asset</span> (wideo lub obraz) oraz <span class="mono">output.format/size</span>. Napisy są opcjonalne, ale jeśli podasz URL — zostaną dołączone jako <span class="mono">asset.type = "caption"</span>.
+                <br><span>https://jdblayer-assets.s3.eu-west-2.amazonaws.com/londynek/video/tmp/newsroom-power-lines.mp4</span>
+              </div>
+            </details>
+
+            <!-- Prompt dla AI (opcjonalnie) -->
+            <details style="margin-top:10px">
+              <summary>Prompt dla AI (opcjonalnie)</summary>
+              <div class="row" style="grid-template-columns: 2fr 1fr; margin-top:10px;">
+                <div>
+                  <label for="prompt-select">Wybierz prompt</label>
+                  <select id="prompt-select"><option value="">— wybierz —</option></select>
+                </div>
+                <div style="align-self:end;">
+                  <button class="btn secondary" id="run-ai-promptBtn">Użyj promptu z danymi</button>
+                </div>
+              </div>
+              <label for="prompt-text">Albo wpisz własny</label>
+              <textarea id="prompt-text" rows="5" placeholder="Instrukcje dla modelu (np. wygeneruj listę ujęć, overlaye tekstowe, CTA)"></textarea>
+              <div class="help">Jeżeli formularz został zasilony danymi przez <span class="mono">scrap_page_view</span>, kliknięcie „Użyj promptu…” przekaże <span class="mono">system_prompt/user_prompt</span> do <span class="mono">ask_model_openai()</span> i wypełni szkic scenariusza.</div>
+            </details>
+
+  
+            <!-- TTS / Narracja -->
+            <div class="card" style="margin-top:12px;background:#0f1522;border:1px solid #233248;">
+              <h2>TTS / Narracja</h2>
+              <div class="body">
+                <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
+                  <div>
+                    <label for="tts-provider">Provider TTS</label>
+                      <select name="provider" id="tts-provider">
+                        <option value="google" {{ 'selected' if default_provider == 'google' else '' }}>Google</option>
+                        <option value="microsoft" {{ 'selected' if default_provider == 'microsoft' else '' }}>Microsoft</option>
+                      </select>
+                  </div>
+                  <div>
+                    <label for="tts-voice">Głos (voice)</label>
+                    <select name="voice" id="tts-voice">
+                      {% set ns = namespace(selected=false) %}
+                      {% for v in voices %}
+                        {% if v.startswith('---') %}
+                          <option value="">{{ v }}</option>
+                        {% elif not ns.selected %}
+                          <option value="{{ v }}" selected>{{ v }}</option>
+                          {% set ns.selected = true %}
+                        {% else %}
+                          <option value="{{ v }}">{{ v }}</option>
+                        {% endif %}
+                      {% endfor %}
+                    </select>
+                  </div>
+                  <div>
+                    <label for="tts-speed">Szybkość lektora</label>
+                    <input id="tts-speed" type="number" step="0.1" min="0.5" max="2.0" value="1.0" />
+                  </div>
+                </div>
+                <div class="row" style="grid-template-columns: 1fr;">
+                  <div>
+                    <label for="tts-lang">Język</label>
+                    <input id="tts-lang" type="text" value="pl" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Formatowanie / Efekty / Logo / Przejścia -->
+            <div class="card" style="margin-top:12px;background:#0f1522;border:1px solid #233248;">
+              <h2>Formaty / Efekty / Logo / Przejścia</h2>
+              <div class="body">
+                <div class="row" style="grid-template-columns: 1fr;">
+                  <div>
+                    <label for="format-select">Format wynikowy</label>
+                    <select id="format-select" name="formats">
+                      <option value="16x9" selected>16:9 (1920x1080)</option>
+                      <option value="1x1">1:1 (1080x1080)</option>
+                      <option value="9x16">9:16 (1080x1920)</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="row" style="grid-template-columns: 1fr;">
+                  <label><input id="sub-burn" type="checkbox" checked /> Wypal napisy (burn-in)</label>
+                </div>
+                <fieldset style="border:1px solid #21314a;border-radius:10px;padding:14px;grid-column: 1 / -1;">
+                  <label>Logo URL
+                    <input id="logo-url" type="text" placeholder="https://.../logo.png" />
+                  </label>            
+                <!-- <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
+                  <div>
+                    <label for="logo-url">Logo URL</label>
+                    <input id="logo-url" type="text" placeholder="https://.../logo.png" />
+                  </div> -->
+                  <div class="fieldset-inputs-flex-row">
+                    <label for="logo-position">Pozycja logo
+                      <select id="logo-position">
+                        <option value="top-left">top-left</option>
+                        <option value="top-right" selected>top-right</option>
+                        <option value="bottom-left">bottom-left</option>
+                        <option value="bottom-right">bottom-right</option>
+                      </select>
+                    </label>
+                  <!-- </div>
+                  <div> -->
+                    <label for="logo-opacity">Przezroczystość (0–1)
+                      <input id="logo-opacity" type="number" step="0.05" min="0" max="1" value="0.85" />
+                    </label>
+                  <!-- </div>
+                  <div> -->
+                    <label for="logo-scale">Skala logo (0.05–0.3)
+                      <input id="logo-scale" type="number" step="0.01" min="0.05" max="0.3" value="0.15" />
+                    </label>
+                  </div>
+                </fieldset>
+
+                <div class="row" style="grid-template-columns: 1fr 1fr 1fr;">
+                  <div>
+                    <label><input id="xfade-use" type="checkbox" checked /> Przejścia (crossfade)</label>
+                  </div>
+                  <div>
+                    <label for="xfade-transition">Typ przejścia</label>
+                    <select id="xfade-transition">
+                      <option value="fade" selected>fade</option>
+                      <option value="reveal">reveal</option>
+                      <option value="wipeLeft">wipeLeft</option>
+                      <option value="slideLeft">slideLeft</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label for="xfade-duration">Czas trwania (s)</label>
+                    <input id="xfade-duration" type="number" step="0.1" min="0.1" max="3" value="1.5" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+
+
+
+            <!-- Narration script (optional) -->
+            <div class="card" style="margin-top:12px;background:#0f1522;border:1px solid #233248;">
+              <h2>Skrypt narracji (opcjonalny)</h2>
+              <div class="body">
+                <label for="narration_script">Jeśli podasz skrypt — TTS i Sora użyją go zamiast Treści</label>
+                <textarea id="narration_script" name="narration_script" rows="6" placeholder="Wklej dokładny skrypt narracji do wykorzystania przez TTS i Sora."></textarea>
+              </div>
+            </div>
+            <div class="footer-actions">
+              <button type="button" class="btn" id="validateBtn" formnovalidate>Sprawdź wymagane pola</button>
+              <button type="button" id="healthBtn" class="btn secondary" formnovalidate>Sprawdź środowisko</button>
+              <button type="button" class="btn" id="submitBtn">Renderuj</button>
+            </div>
+              
+            <div id="status" class="help" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+
+    </div><div class="grid-1">
+
+      <div class="card">
+        <h2>Szkic payloadu</h2>
+        <div class="body">
+          <pre id="payloadPreview" class="mono" style="white-space:pre-wrap;">{ }</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Manifest</h2>
+        <div class="body">
+          <pre id="manifestPreview" class="mono" style="white-space:pre-wrap;">{ }</pre>
+        </div>
+      </div>
+
+    </div>
+    </form>
+
+  </div>
+
+  <!-- Modal z podglądem manifestu -->
+  <div id="manifestModal" class="hidden" style="
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;
+    z-index:1000;">
+    <div style="background:#121925;color:#e6eef7;border-radius:10px;max-width:1100px;width:92%;padding:20px;box-shadow:0 6px 24px #000;height:calc(100% - 100px);">
+      <h2 style="margin-top:0">Podgląd przed wysłaniem</h2>
+
+      <!-- Dwie kolumny: Manifest + Pola formularza -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;height:calc(100% - 90px);">
+        <div style="overflow:auto;;display:flex;flex-direction:column;">
+          <div style="font-weight:700;margin-bottom:6px;">Manifest (JSON)</div>
+          <pre id="manifestModalContent"
+              style="flex:1;overflow:auto;background:#111;padding:12px;border-radius:6px;color:#e8e8e8;font-size:13px;"></pre>
+        </div>
+
+        <div style="min-width:0;display:flex;flex-direction:column;">
+          <div style="font-weight:700;margin-bottom:6px;">Pola formularza (nazwa ➝ wartość)</div>
+          <pre id="formFieldsModalContent"
+              style="flex:1;overflow:auto;background:#111;padding:12px;border-radius:6px;color:#e8e8e8;font-size:13px;"></pre>
+        </div>
+      </div>
+
+      <div style="margin-top:12px;text-align:right;">
+        <button id="manifestCancelBtn" class="btn secondary">Anuluj</button>
+        <button id="manifestConfirmBtn" class="btn">Dalej</button>
+      </div>
+    </div>
+  </div>
+
+
+  <div id="loaderOverlay" role="alert" aria-busy="true" aria-live="assertive">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
+      <div class="loader" aria-hidden="true"></div>
+      <div id="loaderText">Renderowanie wideo… to może potrwać kilkadziesiąt sekund.</div>
+          <div id="loaderProgress" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" role="progressbar">
+        <div id="loaderProgressBar" class="bar"></div>
       </div>
-
-      <div class="card">
-        <h2>Manifest</h2>
-        <div class="body">
-          <pre id="manifestPreview" class="mono" style="white-space:pre-wrap;">{ }</pre>
-        </div>
-      </div>
-
-    </div>
-    </form>
-
-  </div>
-
-  <!-- Modal z podglądem manifestu -->
-  <div id="manifestModal" class="hidden" style="
-    position:fixed;top:0;left:0;width:100%;height:100%;
-    background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;
-    z-index:1000;">
-    <div style="background:#121925;color:#e6eef7;border-radius:10px;max-width:1100px;width:92%;padding:20px;box-shadow:0 6px 24px #000;height:calc(100% - 100px);">
-      <h2 style="margin-top:0">Podgląd przed wysłaniem</h2>
-
-      <!-- Dwie kolumny: Manifest + Pola formularza -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;height:calc(100% - 90px);">
-        <div style="overflow:auto;;display:flex;flex-direction:column;">
-          <div style="font-weight:700;margin-bottom:6px;">Manifest (JSON)</div>
-          <pre id="manifestModalContent"
-              style="flex:1;overflow:auto;background:#111;padding:12px;border-radius:6px;color:#e8e8e8;font-size:13px;"></pre>
-        </div>
-
-        <div style="min-width:0;display:flex;flex-direction:column;">
-          <div style="font-weight:700;margin-bottom:6px;">Pola formularza (nazwa ➝ wartość)</div>
-          <pre id="formFieldsModalContent"
-              style="flex:1;overflow:auto;background:#111;padding:12px;border-radius:6px;color:#e8e8e8;font-size:13px;"></pre>
-        </div>
-      </div>
-
-      <div style="margin-top:12px;text-align:right;">
-        <button id="manifestCancelBtn" class="btn secondary">Anuluj</button>
-        <button id="manifestConfirmBtn" class="btn">Dalej</button>
-      </div>
-    </div>
-  </div>
-
-
-  <div id="loaderOverlay" role="alert" aria-busy="true" aria-live="assertive">
-    <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
-      <div class="loader" aria-hidden="true"></div>
-      <div id="loaderText">Renderowanie wideo… to może potrwać kilkadziesiąt sekund.</div>
-    </div>
-  </div>
-
-
-
-  <script>
-  // ---- helpers ----
-  // const $ = sel => document.querySelector(sel);
-  const $ = (sel, root=document) => root.querySelector(sel);
-  const val = (id) => (document.getElementById(id)?.value || '').trim();
-  const REMOTE_RENDERERS = new Set(['shotstack', 'json2video', 'mediaconvert', 'openshot', 'openai_sora']);
-  // Map default Sora size from selected output format
-  function defaultSoraSizeForFormat(fmt){
-    fmt = String(fmt||'').toLowerCase();
-    if (fmt === '16x9') return '1280x720';
-    if (fmt === '9x16') return '720x1280';
-    if (fmt === '1x1')  return '1024x1024';
-    return '1280x720';
-  }
-  // Helpers: Sora preflight for reference image vs requested size
-  const parseSize = (s) => {
-    if (!s || typeof s !== 'string') return null;
-    const m = s.trim().match(/^(\d+)x(\d+)$/i);
-    if (!m) return null;
-    const w = parseInt(m[1], 10), h = parseInt(m[2], 10);
-    if (!w || !h) return null; return {w, h};
-  };
-  const getImageSize = (url) => new Promise((resolve, reject) => {
-    if (!url) return resolve(null);
-    const img = new Image();
-    img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
-    img.onerror = () => resolve(null);
-    // avoid credentials leak; size should be readable without CORS for most hosts
-    img.crossOrigin = 'anonymous';
-    img.src = url;
-  });
-  // --- scrapowanie strony i wypełnienie formularza ---
-  const scrapBtn = document.getElementById('scrapBtn');
-  const scrapUrlInput = document.getElementById('scrap-url-scrapUrl');
-  const loaderOverlay = document.getElementById('loaderOverlay');
-  const createForm = document.getElementById('createForm'); 
-  const submitBtn = document.getElementById('submitBtn'); 
-  const statusBox = document.getElementById('status');
-  const healthBtn = document.getElementById('healthBtn');
-
-  const LOADER_MESSAGES = {
-    queue: 'Zlecam renderowanie… proszę czekać.',
-    rendering: 'Renderowanie w toku… to może potrwać kilka minut.'
-  };
-
-  function setStatusMessage(html) {
-    if (!statusBox) return;
-    statusBox.innerHTML = html;
-  }
-
-  function toggleLoaderOverlay(visible, text) {
-    if (!loaderOverlay) return;
-    loaderOverlay.style.display = visible ? 'flex' : 'none';
-    if (visible && text) {
-      const lt = document.getElementById('loaderText');
-      if (lt) lt.textContent = text;
-    }
-  }
-
+      <div id="loaderProgressText"></div>
+    </div>
+  </div>
+
+
+
+  <script>
+  // ---- helpers ----
+  // const $ = sel => document.querySelector(sel);
+  const $ = (sel, root=document) => root.querySelector(sel);
+  const val = (id) => (document.getElementById(id)?.value || '').trim();
+  const REMOTE_RENDERERS = new Set(['shotstack', 'json2video', 'mediaconvert', 'openshot', 'openai_sora']);
+  // Map default Sora size from selected output format
+  function defaultSoraSizeForFormat(fmt){
+    fmt = String(fmt||'').toLowerCase();
+    if (fmt === '16x9') return '1280x720';
+    if (fmt === '9x16') return '720x1280';
+    if (fmt === '1x1')  return '1024x1024';
+    return '1280x720';
+  }
+  // Helpers: Sora preflight for reference image vs requested size
+  const parseSize = (s) => {
+    if (!s || typeof s !== 'string') return null;
+    const m = s.trim().match(/^(\d+)x(\d+)$/i);
+    if (!m) return null;
+    const w = parseInt(m[1], 10), h = parseInt(m[2], 10);
+    if (!w || !h) return null; return {w, h};
+  };
+  const getImageSize = (url) => new Promise((resolve, reject) => {
+    if (!url) return resolve(null);
+    const img = new Image();
+    img.onload = () => resolve({ width: img.naturalWidth || img.width, height: img.naturalHeight || img.height });
+    img.onerror = () => resolve(null);
+    // avoid credentials leak; size should be readable without CORS for most hosts
+    img.crossOrigin = 'anonymous';
+    img.src = url;
+  });
+  // --- scrapowanie strony i wypełnienie formularza ---
+  const scrapBtn = document.getElementById('scrapBtn');
+  const scrapUrlInput = document.getElementById('scrap-url-scrapUrl');
+  const loaderOverlay = document.getElementById('loaderOverlay');
+  const createForm = document.getElementById('createForm'); 
+  const submitBtn = document.getElementById('submitBtn'); 
+  const statusBox = document.getElementById('status');
+  const healthBtn = document.getElementById('healthBtn');
+
+  const LOADER_MESSAGES = {
+    queue: 'Zlecam renderowanie… proszę czekać.',
+    rendering: 'Renderowanie w toku… to może potrwać kilka minut.'
+  };
+
+  function setStatusMessage(html) {
+    if (!statusBox) return;
+    statusBox.innerHTML = html;
+  }
+
+  function toggleLoaderOverlay(visible, text) {
+    if (!loaderOverlay) return;
+    loaderOverlay.style.display = visible ? 'flex' : 'none';
+    if (visible && text) {
+      const lt = document.getElementById('loaderText');
+      if (lt) lt.textContent = text;
+    }
+  }
+
   async function waitForRenderCompletion(projectId, { intervalMs = 4000, timeoutMs = 15 * 60 * 1000 } = {}, onTick) {
-    const start = Date.now();
-    let delay = intervalMs;
-
-    while (true) {
-      await new Promise(resolve => setTimeout(resolve, delay));
-
-      const resp = await fetch(`/news-to-video/api/status/${encodeURIComponent(projectId)}?t=${Date.now()}`, { cache: 'no-store' });
-      if (!resp.ok) {
-        throw new Error(`Status HTTP ${resp.status}`);
-      }
-      const payload = await resp.json();
-      const status = String(payload.status || '').toLowerCase();
-
-      if (typeof onTick === 'function') {
-        try {
-          onTick(payload, status);
-        } catch (tickErr) {
-          console.warn('waitForRenderCompletion onTick error:', tickErr);
-        }
-      }
-
-      if (['done', 'completed', 'complete'].includes(status)) {
-        return payload;
-      }
-      if (['failed', 'error'].includes(status)) {
-        const err = new Error(payload.error || 'Render zakończył się błędem.');
-        err.payload = payload;
-        throw err;
-      }
-      if (Date.now() - start > timeoutMs) {
-        const err = new Error('Przekroczono czas oczekiwania na render.');
-        err.payload = payload;
-        throw err;
-      }
-
-      delay = Math.min(delay + 800, 7000);
-    }
+    const start = Date.now();
+    let delay = intervalMs;
+
+    while (true) {
+      await new Promise(resolve => setTimeout(resolve, delay));
+
+      const resp = await fetch(`/news-to-video/api/status/${encodeURIComponent(projectId)}?t=${Date.now()}`, { cache: 'no-store' });
+      if (!resp.ok) {
+        throw new Error(`Status HTTP ${resp.status}`);
+      }
+      const payload = await resp.json();
+      const status = String(payload.status || '').toLowerCase();
+
+      if (typeof onTick === 'function') {
+        try {
+          onTick(payload, status);
+        } catch (tickErr) {
+          console.warn('waitForRenderCompletion onTick error:', tickErr);
+        }
+      }
+
+      if (['done', 'completed', 'complete'].includes(status)) {
+        return payload;
+      }
+      if (['failed', 'error'].includes(status)) {
+        const err = new Error(payload.error || 'Render zakończył się błędem.');
+        err.payload = payload;
+        throw err;
+      }
+      if (Date.now() - start > timeoutMs) {
+        const err = new Error('Przekroczono czas oczekiwania na render.');
+        err.payload = payload;
+        throw err;
+      }
+
+      delay = Math.min(delay + 800, 7000);
+    }
   }
 
-  // load date function
-  async function loadPrompts() {
-    // console.log('loadPrompts()');
-    // alert('loadPrompts()');
-    try {
-      const res = await fetch(`{{ url_for('news_to_video.prompts') }}`, {headers:{'Accept':'application/json'}});
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      const data = await res.json();
-      const selA = document.getElementById('scrap-url-prompt_id');
-      const selB = document.getElementById('prompt-select'); // opcjonalnie: drugi select w sekcji Prompt dla AI
-      const opts = (data.prompts || []).map(p=>({value:p.id, label:p.label}));
-      if(selA){ selA.innerHTML = '<option value="">— wybierz prompt —</option>' + opts.map(o=>`<option value="${o.value}">${o.label}</option>`).join(''); }
-      if(selB){ selB.innerHTML = '<option value="">— wybierz —</option>' + opts.map(o=>`<option value="${o.value}" data-text="">${o.label}</option>`).join(''); }
-    } catch(e){ 
-      console.error('Prompts load error:', e); 
-    }
+  function formatTime(ms){
+    ms = Math.max(0, Math.floor(ms));
+    const totalSec = Math.floor(ms/1000);
+    const m = Math.floor(totalSec/60);
+    const s = totalSec % 60;
+    return `${m}:${String(s).padStart(2,'0')}`;
   }
-
-  async function loadVoices(provider){
-    const sel = document.getElementById('tts-voice');
-    if (!sel) return;
-    sel.innerHTML = '';
-    try {
-      const res = await fetch(`{{ url_for('news_to_video.voices') }}?provider=${encodeURIComponent(provider)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      const voices = Array.isArray(data.voices) ? data.voices : [];
-      if (!voices.length) {
-        const opt = document.createElement('option');
-        opt.value = '';
-        opt.textContent = 'Brak dostępnych głosów';
-        opt.disabled = true;
-        sel.appendChild(opt);
-        return;
-      }
-      voices.forEach(item => {
-        const label = typeof item === 'string' ? item : (item.label || item.name || item.id || '');
-        if (!label) return;
-        const labelStr = String(label);
-        const opt = document.createElement('option');
-        opt.textContent = labelStr;
-        if (labelStr.startsWith('---')) {
-          opt.disabled = true;
-        } else {
-          const value = typeof item === 'string' ? item : (item.value || item.name || item.id || labelStr);
-          opt.value = value;
-        }
-        sel.appendChild(opt);
-      });
-    } catch (err) {
-      console.error('loadVoices error:', err);
-      const opt = document.createElement('option');
-      opt.value = '';
-      opt.textContent = 'Błąd ładowania głosów';
-      opt.disabled = true;
-      sel.appendChild(opt);
-    }
-  }
-
-  function syncProfileDims() {
-    const pr = val('format-select');
-    const pill = $('#profile-pill');
-    if (pill) pill.textContent = `format: ${pr.replace('x', ':')}`;
-
-    if (val('renderer') === 'shotstack') {
-      const w = $('#ss-width');
-      const h = $('#ss-height');
-      if (!w || !h) return;  // jeszcze nie wstrzyknięte
-
-      if (pr === '16x9') { w.value = 1920; h.value = 1080; }
-      if (pr === '9x16') { w.value = 1080; h.value = 1920; }
-      if (pr === '1x1')  { w.value = 1080; h.value = 1080; }
-    }
-  }
-
-  function setFieldError(id, msg){
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.classList.add('field-error');
-    if (msg) el.title = msg; else el.removeAttribute('title');
-  }
-  function clearFieldError(id){
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.classList.remove('field-error');
-    el.removeAttribute('title');
-  }
-
-  function requireFields() {
-    const errors = [];
-    // if(!val('project-name')) errors.push('Nazwa/ID projektu');
-    const r = val('renderer');
-    // TTS - wymagany głos narracji
-    const ttsVoice = (document.getElementById('tts-voice')?.value || '').trim();
-    if (!ttsVoice) errors.push('Głos narracji (TTS voice)')
-    // else alert(`ttsVoice==>${ttsVoice}`);
-    // co najmniej 1 medium: video lub image
-    if(!val('video-src') && !val('image-src')) errors.push('URL wideo lub obraz');
-    if(r==='shotstack'){
-      if(!val('ss-format')) errors.push('Format (Shotstack)');
-      if(!val('ss-width') || !val('ss-height')) errors.push('Wymiary (Shotstack)');
-    } else if (r==='local') {
-      if(!val('local-out-name')) errors.push('Nazwa pliku wyjściowego (local)');
-    } else if (r==='openai_sora') {
-      const soraPrompt = (document.getElementById('sora-prompt-template')?.value || '').trim();
-      if (!soraPrompt) errors.push('Prompt dla OpenAI Sora');
-    }
-    // Wyczyść poprzednie oznaczenia
-    ['video-src','image-src','tts-voice','ss-format','ss-width','ss-height','local-out-name'].forEach(clearFieldError);
-    // Oznacz brakujące pola
-    if(!val('video-src') && !val('image-src')){ setFieldError('video-src','Wymagany jest URL wideo lub obraz'); setFieldError('image-src','Wymagany jest URL wideo lub obraz'); }
-    if(!ttsVoice){ setFieldError('tts-voice','Wybierz głos narracji'); }
-    if(r==='shotstack'){
-      if(!val('ss-format')) setFieldError('ss-format','Wybierz format');
-      if(!val('ss-width')) setFieldError('ss-width','Podaj szerokość');
-      if(!val('ss-height')) setFieldError('ss-height','Podaj wysokość');
-    } else if (r==='local') {
-      if(!val('local-out-name')) setFieldError('local-out-name','Podaj nazwę pliku wyjściowego');
-    }
-    return errors;
-  }
-
-  function refreshPreviews() {
-    const payload = buildPayloadFromForm();
-    const manifest = buildManifest();
-    const payloadEl = document.getElementById('payloadPreview');
-    const manifestEl = document.getElementById('manifestPreview');
-    if (payloadEl)  payloadEl.textContent  = JSON.stringify(manifest.payload,  null, 2);
-    if (manifestEl) manifestEl.textContent = JSON.stringify(manifest, null, 2);
-  }
-
-  function toggleRendererUI(){
-    const r = val('renderer');
-    $('#badge-renderer').textContent = r;
-    $('#cfg-local').classList.toggle('hidden', r!=='local');
-    const remoteBox = document.getElementById('cfg-shotstack');
-    if (remoteBox) {
-      remoteBox.classList.toggle('hidden', !REMOTE_RENDERERS.has(r));
-    }
-    syncProfileDims();
-    refreshPreviews();
-  }
-
-  // ---- Persist form state in localStorage ----
-  const FORM_STATE_KEY = 'news_to_video_create_form_v1';
-  function saveFormState(){
-    try{
-      const form = document.getElementById('createForm');
-      if (!form) return;
-      const data = {};
-      for (const el of Array.from(form.elements)){
-        if (!el || !el.name && !el.id) continue;
-        const key = el.id || el.name;
-        const tag = (el.tagName||'').toLowerCase();
-        const type = (el.type||'').toLowerCase();
-        if (type === 'password') continue; // nie zapisujemy haseł
-        if (type === 'checkbox') data[key] = !!el.checked;
-        else if (type === 'radio') { if (el.checked) data[key] = el.value; }
-        else data[key] = (el.value ?? '').toString();
-      }
-      localStorage.setItem(FORM_STATE_KEY, JSON.stringify(data));
-    }catch(e){ console.warn('saveFormState:', e); }
-  }
-  function loadFormState(){
-    try{
-      const raw = localStorage.getItem(FORM_STATE_KEY);
-      if (!raw) return;
-      const data = JSON.parse(raw);
-      const form = document.getElementById('createForm');
-      if (!form || !data) return;
-      for (const el of Array.from(form.elements)){
-        if (!el || !el.name && !el.id) continue;
-        const key = el.id || el.name;
-        if (!(key in data)) continue;
-        const type = (el.type||'').toLowerCase();
-        if (type === 'checkbox') el.checked = !!data[key];
-        else if (type === 'radio') { if (el.value === data[key]) el.checked = true; }
-        else el.value = data[key];
-      }
-      // po odtworzeniu dopasuj UI i podglądy
-      toggleRendererUI();
-      refreshPreviews();
-    }catch(e){ console.warn('loadFormState:', e); }
-  }
-
-  async function scrapAndFill(){
-    console.log('scrapAndFill()');
-    const url = (scrapUrlInput && scrapUrlInput.value || '').trim();
-    if(!url){ alert('Podaj adres URL.'); return; }
-    try{
-      if(loaderOverlay){ loaderOverlay.style.display='flex'; $('#loaderText').textContent='Pobieram i streszczam artykuł…'; }
-      const res = await fetch(`{{ url_for('news_to_video.scrap_page_view') }}`, { 
-        method:'POST', 
-        headers:{'Content-Type':'application/json'}, 
-        body: JSON.stringify({url}) 
-      });
-      const data = await res.json();
-      if(!data.ok) throw new Error(data.error || 'Nie udało się pobrać danych.');
-
-      // console.log('data: ', data);
-
-      const payload = data.payload || {};
-      // wstaw tytuł i tekst
-      const titleInput = document.querySelector('input[name="title"]');
-      const textArea   = document.querySelector('textarea[name="text"]');
-      const mediaUrlsArea = document.querySelector('textarea[name="media_urls"]');
-      // console.log('payload.text',payload.text)
-      if(titleInput && payload.title) titleInput.value = payload.title;
-      if(textArea && payload.text)    textArea.value   = payload.text;
-
-      const media = Array.isArray(payload.media) ? payload.media : [];
-      const mediaUrls = media.map(m=>m.src).filter(Boolean);
-      if(mediaUrlsArea && mediaUrls.length){
-        const existing = mediaUrlsArea.value.trim();
-        const joined = mediaUrls.join('\n');
-        mediaUrlsArea.value = existing ? (existing + '\n' + joined) : joined;
-      }
-      // dodatkowo: mapuj automatycznie do pól wideo/obraz/audio/napisy
-      autoFillMediaInputs(media);
-
-      // jeśli wybrano prompt — wyślij do LLM
-      const promptSel = document.getElementById('scrap-url-prompt_id');
-      const promptId = promptSel ? (promptSel.value || '') : '';
-      // alert(`promptId==>${promptId}`); // summary_pl
-      if(promptId){
-        // document.getElementById('loaderText').textContent = 'Przetwarzam tekst promptem…';
-        if (loaderOverlay) $('#loaderText').textContent = 'Przetwarzam tekst promptem…';
-        const llmPayload = {
-          source_url: url,
-          title: payload.title || '',
-          text: payload.text || '',
-          media: media.map(m => ({type: m.type || 'image', src: m.src})),
-          language: '{{ g.get("ui_lang", "pl") if g else "pl" }}'
-        };
-
-        const r = await fetch(`{{ url_for('news_to_video.scrap_url_apply_prompt') }}`, { 
-          method:'POST', 
-          headers:{'Content-Type':'application/json','Accept':'application/json'}, 
-          body: JSON.stringify({ prompt_id: promptId, data: llmPayload })
-        });
-
-        if (!r.ok) throw new Error('LLM HTTP '+r.status);
-        const out = await r.json();
-        // textArea.value  = 'AAAAAAAAAAAAAAAAAA';
-        payload.text    = out.result_text;
-        textArea.value  = out.result_text;
-
-        if (!out.ok) throw new Error(out.error || 'LLM error');
-        // if(textArea && out.result_text) textArea.value = out.result_text;
-        if (titleInput && out.result_title) titleInput.value = out.result_title;
-      }
-
-    } catch(err){ 
-      console.error(err); 
-      alert('Błąd: '+(err?.message||'nieznany'));
-    } finally{ 
-      if(loaderOverlay){ 
-        console.log(loaderOverlay.style.display);
-        loaderOverlay.style.display='none';
-        console.log('loaderOverlay.style.display');
-        console.log(loaderOverlay.style.display); 
-        document.getElementById('loaderText').textContent = 'Renderowanie wideo… to może potrwać kilkadziesiąt sekund.';
-        // $('#loaderText').textContent='Renderowanie wideo… to może potrwać kilkadziesiąt sekund.'; 
-      } 
-      refreshPreviews();
-    }
-  }
-
-  function autoFillMediaInputs(media){
-    // wybierz pierwsze wystąpienia
-    const byType = { video:null, image:null, audio:null, captions:null };
-    for(const m of media){
-      const src = m?.src || '';
-      const type = (m?.type||'').toLowerCase();
-      if(!byType.video && (type==='video' || src.match(/\.(mp4|mov|m4v|webm)(\?|$)/i))) byType.video = src;
-      if(!byType.image && (type==='image' || src.match(/\.(png|jpe?g|webp)(\?|$)/i))) byType.image = src;
-      if(!byType.audio && (type==='audio' || src.match(/\.(mp3|wav|m4a|aac)(\?|$)/i))) byType.audio = src;
-      if(!byType.captions && (type==='caption' || src.match(/\.(srt|vtt)(\?|$)/i))) byType.captions = src;
-    }
-    if(byType.video)   document.getElementById('video-src').value    = byType.video;
-    if(!byType.video && byType.image) document.getElementById('image-src').value = byType.image;
-    if(byType.audio)   document.getElementById('audio-src').value    = byType.audio;
-    if(byType.captions)document.getElementById('captions-src').value = byType.captions;
-    refreshPreviews();
-  }
-
-  // --- Aktualizacja podglądów (payload + manifest) przy opuszczeniu pól ---
-  function buildPayloadFromForm(){
-    const formData = new FormData(document.getElementById('createForm'));
-    const payload = {};
-    formData.forEach((val, key) => {
-      if (payload[key] !== undefined) {
-        if (!Array.isArray(payload[key])) payload[key] = [payload[key]];
-        payload[key].push(val);
-      } else {
-        payload[key] = val;
-      }
-    });
-    return payload;
-  }
-
-  function buildManifestFromPayload(payload){
-    const source_url = (scrapUrlInput && scrapUrlInput.value || '').trim();
-    const media_urls = (payload.media_urls && Array.isArray(payload.media_urls))
-      ? payload.media_urls : (payload.media_urls ? [payload.media_urls] : []);
-    const media = media_urls.map(src => {
-      const s = (src||'').toLowerCase();
-      let type = 'image';
-      if (/\.(mp4|mov|m4v|webm)(\?|$)/.test(s)) type = 'video';
-      else if (/\.(mp3|wav|m4a|aac)(\?|$)/.test(s)) type = 'audio';
-      else if (/\.(srt|vtt)(\?|$)/.test(s)) type = 'caption';
-      return { type, src };
-    });
-    return {
-      project_id: null,
-      status: 'draft',
-      created_at: new Date().toISOString(),
-      source_url,
-      article: { title: payload.title || '', text: payload.text || '' },
-      media,
-      tts: { provider: payload.provider, voice: payload.voice, speed: payload.speed },
-      render: {
-        renderer_type: payload.renderer_type,
-        formats: payload.formats,
-        effects: {
-          use_xfade: payload.use_xfade,
-          xfade_transition: payload.xfade_transition,
-          xfade_duration: payload.xfade_duration,
-          burn_subtitles: payload.burn_subtitles
-        },
-        logo: {
-          url: payload.logo_url,
-          file: payload.logo_file,
-          position: payload.logo_position,
-          opacity: payload.logo_opacity,
-          scale: payload.logo_scale
-        },
-        renderer_specific: {} // można uzupełnić gdy potrzeba
-      }
-    };
-  }
-
-  async function loadRendererFields(type) {
-      const container = document.getElementById('renderer_fields');
-      if (!container) return;
-
-      // Dla local – krótka informacja i koniec
-      if (type === 'local') {
-        container.innerHTML = `
-            <div style="grid-column:1/-1;color:#666;font-size:14px">
-            Lokalny rendering nie wymaga dodatkowej konfiguracji w tym formularzu.
-            </div>`;
-        return;
-      }
-
-      // Pokaż prosty "inline loader" w kontenerze
-      container.innerHTML = `
-        <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px">
-            <div class="loader" aria-hidden="true" style="width:20px;height:20px;border-width:3px"></div>
-            <div>Wczytuję pola dla <strong>${type}</strong>…</div>
-        </div>`;
-
-      try {
-        // alert('renderer_form - START');
-        const url = `{{ url_for('news_to_video.renderer_form') }}?type=${encodeURIComponent(type)}`;
-        const res = await fetch(url, { headers: { 'X-Requested-With': 'fetch' }});
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-          const html = await res.text();
-          container.innerHTML = html;
-          refreshPreviews();
-        // alert('renderer_form - END');
-      } catch (err) {
-        console.error(err);
-        alert('renderer_form - ERROR', err);
-        container.innerHTML = `
-            <div style="grid-column:1/-1;color:#b00020">
-            Nie udało się wczytać pól dla „${type}”. Spróbuj ponownie lub wybierz inny backend.
-            </div>`;
-      }
-  }
-
-  function setTransitionsForBackend(backend) {
-    alert('setTransitionsForBackend');
-    if (!xfadeSelect) return;
-    const list = transitionsByBackend[backend] || transitionsByBackend.default;
-    const current = xfadeSelect.value;
-    xfadeSelect.innerHTML = '';
-    list.forEach(name => {
-      const opt = document.createElement('option');
-      opt.value = name; opt.textContent = name;
-      xfadeSelect.appendChild(opt);
-    });
-    // zachowaj poprzedni wybór jeśli jest dostępny, inaczej ustaw 'fade' lub pierwszy
-    if (list.includes(current)) xfadeSelect.value = current;
-    else if (list.includes('fade')) xfadeSelect.value = 'fade';
-  }
-
-  // ---- events ----
-  ['project-name','renderer','format-select','video-src','image-src','audio-src','captions-src',
-    'ss-format','ss-width','ss-height','ss-callback','ss-font-family','ss-font-size','ss-font-color','ss-stroke',
-    'ss-stroke-width','ss-bg','ss-bg-opacity','local-out-name','local-burn-captions'].forEach(id=>{
-    const el = document.getElementById(id); if(el){ el.addEventListener('input', ()=>{ refreshPreviews(); saveFormState(); }); }
-  });
-  $('#renderer').addEventListener('change', toggleRendererUI);
-  $('#format-select').addEventListener('change', syncProfileDims);
-
-  const validateBtn = document.getElementById('validateBtn');
-  validateBtn?.addEventListener('click', (e) => {
-    console.log('pressed validateBtn');
-    // alert('pressed validateBtn');
-    e.preventDefault(); // na wszelki wypadek
-    const errs = requireFields();
-    if (errs.length) { $('#status').innerHTML = '<span class="err">Brak wymaganych pól:</span> '+errs.join(', '); }
-    else { $('#status').innerHTML = '<span class="ok">OK — minimalny zestaw danych jest kompletny.</span>'; }
-  });
-
-  async function checkHealthForSubmit(){
-    try{
-      const r = val('renderer');
-      const ttsVoice = (document.getElementById('tts-voice')?.value || '').trim();
-      // tylko przypadki wymagające ffmpeg (local, lub sora z lektorem)
-      const needsFfmpeg = (r==='local') || (r==='openai_sora' && !!ttsVoice);
-      if (!needsFfmpeg) return {ok:true};
-      const res = await fetch('{{ url_for("news_to_video.api_health") }}', {cache:'no-store'});
-      if (!res.ok) return {ok:false, msg:'Błąd sprawdzania środowiska (HTTP '+res.status+').'};
-      const h = await res.json();
-      if (!h.ffmpeg){ return {ok:false, msg:'Brak ffmpeg w PATH — wymagane do mux audio/wideo.'}; }
-      return {ok:true};
-    }catch(e){ return {ok:false, msg: 'Błąd sprawdzania środowiska: '+(e?.message||'nieznany')}; }
-  }
-
-  // Healthcheck środowiska (ffmpeg, API keys)
-  healthBtn?.addEventListener('click', async () => {
-    try{
-      const res = await fetch('{{ url_for("news_to_video.api_health") }}', {cache:'no-store'});
-      if (!res.ok) throw new Error('HTTP '+res.status);
-      const h = await res.json();
-      const lines = [];
-      lines.push(`<b>ffmpeg</b>: ${h.ffmpeg ? 'OK' : '<span class="err">BRAK</span>'}`);
-      lines.push(`<b>OpenAI API Key</b>: ${h.openai_api_key ? 'OK' : '<span class=\"warn\">brak</span>'}`);
-      const g = h.google_tts||{}; lines.push(`<b>Google TTS</b>: ${g.ok ? 'OK' : '<span class=\"warn\">brak</span>'}${g.creds_file ? ' ('+g.creds_file+')' : ''}`);
-      const a = h.azure_tts||{}; lines.push(`<b>Azure TTS</b>: ${(a.key && a.region) ? 'OK' : '<span class=\"warn\">brak</span>'}`);
-      const s = h.s3||{}; lines.push(`<b>S3</b>: ${(s.bucket && s.region) ? 'OK' : '<span class=\"warn\">brak</span>'}`);
-      setStatusMessage(lines.join(' <span class="muted">|</span> '));
-    }catch(e){ setStatusMessage('<span class="err">Błąd healthcheck:</span> '+(e?.message||'nieznany')); }
-  });
-
-  // global listeners for persistence
-  createForm?.addEventListener('input', saveFormState);
-  createForm?.addEventListener('change', saveFormState);
-
-  // Restore on load
-  loadFormState();
-
-  $('#submitBtn').addEventListener('click', async (event)=>{
-    console.log('pressed submitBtn');
-    // alert('pressed submitBtn');
-    // action="{{ url_for('news_to_video.create_submit') }}"
-
-    if (submitBtn.disabled) {
-      return;
-    }
-
-    const errs = requireFields();
-    if (errs.length) { 
-      $('#status').innerHTML = '<span class="err">Uzupełnij najpierw:</span> '+errs.join(', ')+''; 
-      return; 
-    }
-
-    // Healthcheck blokujący, jeśli renderer wymaga ffmpeg
-    const hc = await checkHealthForSubmit();
-    if (!hc.ok){ setStatusMessage('<span class="err">'+hc.msg+'</span>'); return; }
-
-    const manifest = buildManifest();
-
-    console.log('manifest 1');
-    console.log(manifest);
-    // return;
-
-    // jeżeli podano nazwę projektu w polu – dołącz do manifestu
-    const projectName = (document.getElementById('project-name')?.value || '').trim();
-    if (projectName) manifest.project_id = projectName;
-    // Wymuś nazwę pliku wyjściowego z project_id dla renderer: local
-    try {
-      enforceOutputFilenameFromProjectId(manifest);
-      refreshPreviews();
-    } catch(e) { console.warn('enforceOutputFilenameFromProjectId:', e); }
-    // console.log('===> api/render <===', manifest);
-
-    const formFieldsObj = collectAllFormFields(document.getElementById('createForm'));
-
-    // modal - pokaż z pełnym JSON-em
-    $('#manifestModalContent').textContent = JSON.stringify(manifest, null, 2);
-    $('#formFieldsModalContent').textContent = JSON.stringify(formFieldsObj, null, 2);
-    // opcjonalnie: zapamiętaj dla późniejszych kroków
-    window.__lastManifestPreview__ = manifest;
-    window.__lastFormFieldsPreview__ = formFieldsObj;
-
-    $('#manifestModal').classList.remove('hidden');
-    // modal - obsługa przycisków cancell i confirm
-    $('#manifestCancelBtn').onclick = ()=> {
-      $('#manifestModal').classList.add('hidden');
-    };
-    $('#manifestConfirmBtn').onclick = async ()=> {
-      $('#manifestModal').classList.add('hidden');
-      if (!submitBtn.dataset.originalText) {
-        submitBtn.dataset.originalText = submitBtn.textContent || 'Renderuj';
-      }
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Renderuję…';
-      setStatusMessage('Wysyłam żądanie renderowania…');
-      toggleLoaderOverlay(true, LOADER_MESSAGES.queue);
-
-      // Preflight: OpenAI Sora inpainting requires reference image size == requested size
-      try {
-        const r = manifest?.payload?.renderer?.type;
-        const cfg = manifest?.payload?.renderer?.config || {};
-        if (r === 'openai_sora' && cfg.reference_image_url && cfg.size) {
-          const fit = (cfg.ref_image_fit || 'letterbox').toLowerCase();
-          const req = parseSize(cfg.size);
-          const got = await getImageSize(cfg.reference_image_url);
-          if (fit === 'match_image' && req && got && got.width && got.height && (got.width !== req.w || got.height !== req.h)) {
-            // Auto-adjust the requested size to match the reference image dims
-            cfg.size = `${got.width}x${got.height}`;
-            manifest.payload.renderer.config = cfg;
-            console.info(`[Sora] Adjusted size to match reference image: ${cfg.size}`);
-          }
-        }
-      } catch (e) { console.warn('Sora preflight failed (continuing):', e); }
-
-      let projectId = manifest.project_id || null;
-
+
+  // load date function
+  async function loadPrompts() {
+    // console.log('loadPrompts()');
+    // alert('loadPrompts()');
+    try {
+      const res = await fetch(`{{ url_for('news_to_video.prompts') }}`, {headers:{'Accept':'application/json'}});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      const selA = document.getElementById('scrap-url-prompt_id');
+      const selB = document.getElementById('prompt-select'); // opcjonalnie: drugi select w sekcji Prompt dla AI
+      const opts = (data.prompts || []).map(p=>({value:p.id, label:p.label}));
+      if(selA){ selA.innerHTML = '<option value="">— wybierz prompt —</option>' + opts.map(o=>`<option value="${o.value}">${o.label}</option>`).join(''); }
+      if(selB){ selB.innerHTML = '<option value="">— wybierz —</option>' + opts.map(o=>`<option value="${o.value}" data-text="">${o.label}</option>`).join(''); }
+    } catch(e){ 
+      console.error('Prompts load error:', e); 
+    }
+  }
+
+  async function loadVoices(provider){
+    const sel = document.getElementById('tts-voice');
+    if (!sel) return;
+    sel.innerHTML = '';
+    try {
+      const res = await fetch(`{{ url_for('news_to_video.voices') }}?provider=${encodeURIComponent(provider)}`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const voices = Array.isArray(data.voices) ? data.voices : [];
+      if (!voices.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Brak dostępnych głosów';
+        opt.disabled = true;
+        sel.appendChild(opt);
+        return;
+      }
+      voices.forEach(item => {
+        const label = typeof item === 'string' ? item : (item.label || item.name || item.id || '');
+        if (!label) return;
+        const labelStr = String(label);
+        const opt = document.createElement('option');
+        opt.textContent = labelStr;
+        if (labelStr.startsWith('---')) {
+          opt.disabled = true;
+        } else {
+          const value = typeof item === 'string' ? item : (item.value || item.name || item.id || labelStr);
+          opt.value = value;
+        }
+        sel.appendChild(opt);
+      });
+    } catch (err) {
+      console.error('loadVoices error:', err);
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = 'Błąd ładowania głosów';
+      opt.disabled = true;
+      sel.appendChild(opt);
+    }
+  }
+
+  function syncProfileDims() {
+    const pr = val('format-select');
+    const pill = $('#profile-pill');
+    if (pill) pill.textContent = `format: ${pr.replace('x', ':')}`;
+
+    if (val('renderer') === 'shotstack') {
+      const w = $('#ss-width');
+      const h = $('#ss-height');
+      if (!w || !h) return;  // jeszcze nie wstrzyknięte
+
+      if (pr === '16x9') { w.value = 1920; h.value = 1080; }
+      if (pr === '9x16') { w.value = 1080; h.value = 1920; }
+      if (pr === '1x1')  { w.value = 1080; h.value = 1080; }
+    }
+  }
+
+  function setFieldError(id, msg){
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.add('field-error');
+    if (msg) el.title = msg; else el.removeAttribute('title');
+  }
+  function clearFieldError(id){
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.classList.remove('field-error');
+    el.removeAttribute('title');
+  }
+
+  function requireFields() {
+    const errors = [];
+    // if(!val('project-name')) errors.push('Nazwa/ID projektu');
+    const r = val('renderer');
+    // TTS - wymagany głos narracji
+    const ttsVoice = (document.getElementById('tts-voice')?.value || '').trim();
+    if (!ttsVoice) errors.push('Głos narracji (TTS voice)')
+    // else alert(`ttsVoice==>${ttsVoice}`);
+    // co najmniej 1 medium: video lub image
+    if(!val('video-src') && !val('image-src')) errors.push('URL wideo lub obraz');
+    if(r==='shotstack'){
+      if(!val('ss-format')) errors.push('Format (Shotstack)');
+      if(!val('ss-width') || !val('ss-height')) errors.push('Wymiary (Shotstack)');
+    } else if (r==='local') {
+      if(!val('local-out-name')) errors.push('Nazwa pliku wyjściowego (local)');
+    } else if (r==='openai_sora') {
+      const soraPrompt = (document.getElementById('sora-prompt-template')?.value || '').trim();
+      if (!soraPrompt) errors.push('Prompt dla OpenAI Sora');
+    }
+    // Wyczyść poprzednie oznaczenia
+    ['video-src','image-src','tts-voice','ss-format','ss-width','ss-height','local-out-name'].forEach(clearFieldError);
+    // Oznacz brakujące pola
+    if(!val('video-src') && !val('image-src')){ setFieldError('video-src','Wymagany jest URL wideo lub obraz'); setFieldError('image-src','Wymagany jest URL wideo lub obraz'); }
+    if(!ttsVoice){ setFieldError('tts-voice','Wybierz głos narracji'); }
+    if(r==='shotstack'){
+      if(!val('ss-format')) setFieldError('ss-format','Wybierz format');
+      if(!val('ss-width')) setFieldError('ss-width','Podaj szerokość');
+      if(!val('ss-height')) setFieldError('ss-height','Podaj wysokość');
+    } else if (r==='local') {
+      if(!val('local-out-name')) setFieldError('local-out-name','Podaj nazwę pliku wyjściowego');
+    }
+    return errors;
+  }
+
+  function refreshPreviews() {
+    const payload = buildPayloadFromForm();
+    const manifest = buildManifest();
+    const payloadEl = document.getElementById('payloadPreview');
+    const manifestEl = document.getElementById('manifestPreview');
+    if (payloadEl)  payloadEl.textContent  = JSON.stringify(manifest.payload,  null, 2);
+    if (manifestEl) manifestEl.textContent = JSON.stringify(manifest, null, 2);
+  }
+
+  function toggleRendererUI(){
+    const r = val('renderer');
+    $('#badge-renderer').textContent = r;
+    $('#cfg-local').classList.toggle('hidden', r!=='local');
+    const remoteBox = document.getElementById('cfg-shotstack');
+    if (remoteBox) {
+      remoteBox.classList.toggle('hidden', !REMOTE_RENDERERS.has(r));
+    }
+    syncProfileDims();
+    refreshPreviews();
+  }
+
+  // ---- Persist form state in localStorage ----
+  const FORM_STATE_KEY = 'news_to_video_create_form_v1';
+  function saveFormState(){
+    try{
+      const form = document.getElementById('createForm');
+      if (!form) return;
+      const data = {};
+      for (const el of Array.from(form.elements)){
+        if (!el || !el.name && !el.id) continue;
+        const key = el.id || el.name;
+        const tag = (el.tagName||'').toLowerCase();
+        const type = (el.type||'').toLowerCase();
+        if (type === 'password') continue; // nie zapisujemy haseł
+        if (type === 'checkbox') data[key] = !!el.checked;
+        else if (type === 'radio') { if (el.checked) data[key] = el.value; }
+        else data[key] = (el.value ?? '').toString();
+      }
+      localStorage.setItem(FORM_STATE_KEY, JSON.stringify(data));
+    }catch(e){ console.warn('saveFormState:', e); }
+  }
+  function loadFormState(){
+    try{
+      const raw = localStorage.getItem(FORM_STATE_KEY);
+      if (!raw) return;
+      const data = JSON.parse(raw);
+      const form = document.getElementById('createForm');
+      if (!form || !data) return;
+      for (const el of Array.from(form.elements)){
+        if (!el || !el.name && !el.id) continue;
+        const key = el.id || el.name;
+        if (!(key in data)) continue;
+        const type = (el.type||'').toLowerCase();
+        if (type === 'checkbox') el.checked = !!data[key];
+        else if (type === 'radio') { if (el.value === data[key]) el.checked = true; }
+        else el.value = data[key];
+      }
+      // po odtworzeniu dopasuj UI i podglądy
+      // Po odtworzeniu: ustaw stan auto-uzupełniania narracji i dopasuj UI/podglądy
+      try {
+        const textEl = document.getElementById('text');
+        const narrEl = document.getElementById('narration_script');
+        if (narrEl) {
+          // Jeśli puste → auto-fill włączony; inaczej uznaj jako edytowane przez użytkownika
+          if (!narrEl.value || !narrEl.value.trim()) {
+            narrEl.dataset.userEdited = '0';
+            if (textEl && textEl.value) narrEl.value = textEl.value;
+          } else {
+            narrEl.dataset.userEdited = '1';
+          }
+        }
+      } catch(e) { /* noop */ }
+
+      toggleRendererUI();
+      refreshPreviews();
+    }catch(e){ console.warn('loadFormState:', e); }
+  }
+
+  async function scrapAndFill(){
+    console.log('scrapAndFill()');
+    const url = (scrapUrlInput && scrapUrlInput.value || '').trim();
+    if(!url){ alert('Podaj adres URL.'); return; }
+    try{
+      if(loaderOverlay){ loaderOverlay.style.display='flex'; $('#loaderText').textContent='Pobieram i streszczam artykuł…'; }
+      const res = await fetch(`{{ url_for('news_to_video.scrap_page_view') }}`, { 
+        method:'POST', 
+        headers:{'Content-Type':'application/json'}, 
+        body: JSON.stringify({url}) 
+      });
+      const data = await res.json();
+      if(!data.ok) throw new Error(data.error || 'Nie udało się pobrać danych.');
+
+      // console.log('data: ', data);
+
+      const payload = data.payload || {};
+      // wstaw tytuł i tekst
+      const titleInput = document.querySelector('input[name="title"]');
+      const textArea   = document.querySelector('textarea[name="text"]');
+      const mediaUrlsArea = document.querySelector('textarea[name="media_urls"]');
+      // console.log('payload.text',payload.text)
+      if(titleInput && payload.title) titleInput.value = payload.title;
+      if(textArea && payload.text)    textArea.value   = payload.text;
+      // Auto-copy do skryptu narracji, jeśli nie był edytowany przez użytkownika
+      try {
+        const narrEl = document.getElementById('narration_script');
+        if (narrEl && (narrEl.dataset.userEdited !== '1')) {
+          narrEl.value = payload.text || textArea.value || '';
+        }
+      } catch(e) { /* noop */ }
+
+      const media = Array.isArray(payload.media) ? payload.media : [];
+      const mediaUrls = media.map(m=>m.src).filter(Boolean);
+      if(mediaUrlsArea && mediaUrls.length){
+        const existing = mediaUrlsArea.value.trim();
+        const joined = mediaUrls.join('\n');
+        mediaUrlsArea.value = existing ? (existing + '\n' + joined) : joined;
+      }
+      // dodatkowo: mapuj automatycznie do pól wideo/obraz/audio/napisy
+      autoFillMediaInputs(media);
+
+      // jeśli wybrano prompt — wyślij do LLM
+      const promptSel = document.getElementById('scrap-url-prompt_id');
+      const promptId = promptSel ? (promptSel.value || '') : '';
+      // alert(`promptId==>${promptId}`); // summary_pl
+      if(promptId){
+        // document.getElementById('loaderText').textContent = 'Przetwarzam tekst promptem…';
+        if (loaderOverlay) $('#loaderText').textContent = 'Przetwarzam tekst promptem…';
+        const llmPayload = {
+          source_url: url,
+          title: payload.title || '',
+          text: payload.text || '',
+          media: media.map(m => ({type: m.type || 'image', src: m.src})),
+          language: '{{ g.get("ui_lang", "pl") if g else "pl" }}'
+        };
+
+        const r = await fetch(`{{ url_for('news_to_video.scrap_url_apply_prompt') }}`, { 
+          method:'POST', 
+          headers:{'Content-Type':'application/json','Accept':'application/json'}, 
+          body: JSON.stringify({ prompt_id: promptId, data: llmPayload })
+        });
+
+        if (!r.ok) throw new Error('LLM HTTP '+r.status);
+        const out = await r.json();
+        // textArea.value  = 'AAAAAAAAAAAAAAAAAA';
+        payload.text    = out.result_text;
+        textArea.value  = out.result_text;
+        try {
+          const narrEl = document.getElementById('narration_script');
+          if (narrEl && (narrEl.dataset.userEdited !== '1')) {
+            narrEl.value = out.result_text || '';
+          }
+        } catch(e) { /* noop */ }
+
+        if (!out.ok) throw new Error(out.error || 'LLM error');
+        // if(textArea && out.result_text) textArea.value = out.result_text;
+        if (titleInput && out.result_title) titleInput.value = out.result_title;
+      }
+
+    } catch(err){ 
+      console.error(err); 
+      alert('Błąd: '+(err?.message||'nieznany'));
+    } finally{ 
+      if(loaderOverlay){ 
+        console.log(loaderOverlay.style.display);
+        loaderOverlay.style.display='none';
+        console.log('loaderOverlay.style.display');
+        console.log(loaderOverlay.style.display); 
+        document.getElementById('loaderText').textContent = 'Renderowanie wideo… to może potrwać kilkadziesiąt sekund.';
+        // $('#loaderText').textContent='Renderowanie wideo… to może potrwać kilkadziesiąt sekund.'; 
+      } 
+      refreshPreviews();
+    }
+  }
+
+  function autoFillMediaInputs(media){
+    // wybierz pierwsze wystąpienia
+    const byType = { video:null, image:null, audio:null, captions:null };
+    for(const m of media){
+      const src = m?.src || '';
+      const type = (m?.type||'').toLowerCase();
+      if(!byType.video && (type==='video' || src.match(/\.(mp4|mov|m4v|webm)(\?|$)/i))) byType.video = src;
+      if(!byType.image && (type==='image' || src.match(/\.(png|jpe?g|webp)(\?|$)/i))) byType.image = src;
+      if(!byType.audio && (type==='audio' || src.match(/\.(mp3|wav|m4a|aac)(\?|$)/i))) byType.audio = src;
+      if(!byType.captions && (type==='caption' || src.match(/\.(srt|vtt)(\?|$)/i))) byType.captions = src;
+    }
+    if(byType.video)   document.getElementById('video-src').value    = byType.video;
+    if(!byType.video && byType.image) document.getElementById('image-src').value = byType.image;
+    if(byType.audio)   document.getElementById('audio-src').value    = byType.audio;
+    if(byType.captions)document.getElementById('captions-src').value = byType.captions;
+    refreshPreviews();
+  }
+
+  // --- Aktualizacja podglądów (payload + manifest) przy opuszczeniu pól ---
+  function buildPayloadFromForm(){
+    const formData = new FormData(document.getElementById('createForm'));
+    const payload = {};
+    formData.forEach((val, key) => {
+      if (payload[key] !== undefined) {
+        if (!Array.isArray(payload[key])) payload[key] = [payload[key]];
+        payload[key].push(val);
+      } else {
+        payload[key] = val;
+      }
+    });
+    return payload;
+  }
+
+  function buildManifestFromPayload(payload){
+    const source_url = (scrapUrlInput && scrapUrlInput.value || '').trim();
+    const media_urls = (payload.media_urls && Array.isArray(payload.media_urls))
+      ? payload.media_urls : (payload.media_urls ? [payload.media_urls] : []);
+    const media = media_urls.map(src => {
+      const s = (src||'').toLowerCase();
+      let type = 'image';
+      if (/\.(mp4|mov|m4v|webm)(\?|$)/.test(s)) type = 'video';
+      else if (/\.(mp3|wav|m4a|aac)(\?|$)/.test(s)) type = 'audio';
+      else if (/\.(srt|vtt)(\?|$)/.test(s)) type = 'caption';
+      return { type, src };
+    });
+    return {
+      project_id: null,
+      status: 'draft',
+      created_at: new Date().toISOString(),
+      source_url,
+      article: { title: payload.title || '', text: payload.text || '' },
+      media,
+      tts: { provider: payload.provider, voice: payload.voice, speed: payload.speed },
+      render: {
+        renderer_type: payload.renderer_type,
+        formats: payload.formats,
+        effects: {
+          use_xfade: payload.use_xfade,
+          xfade_transition: payload.xfade_transition,
+          xfade_duration: payload.xfade_duration,
+          burn_subtitles: payload.burn_subtitles
+        },
+        logo: {
+          url: payload.logo_url,
+          file: payload.logo_file,
+          position: payload.logo_position,
+          opacity: payload.logo_opacity,
+          scale: payload.logo_scale
+        },
+        renderer_specific: {} // można uzupełnić gdy potrzeba
+      }
+    };
+  }
+
+  async function loadRendererFields(type) {
+      const container = document.getElementById('renderer_fields');
+      if (!container) return;
+
+      // Dla local – krótka informacja i koniec
+      if (type === 'local') {
+        container.innerHTML = `
+            <div style="grid-column:1/-1;color:#666;font-size:14px">
+            Lokalny rendering nie wymaga dodatkowej konfiguracji w tym formularzu.
+            </div>`;
+        return;
+      }
+
+      // Pokaż prosty "inline loader" w kontenerze
+      container.innerHTML = `
+        <div style="grid-column:1/-1;display:flex;align-items:center;gap:10px">
+            <div class="loader" aria-hidden="true" style="width:20px;height:20px;border-width:3px"></div>
+            <div>Wczytuję pola dla <strong>${type}</strong>…</div>
+        </div>`;
+
+      try {
+        // alert('renderer_form - START');
+        const url = `{{ url_for('news_to_video.renderer_form') }}?type=${encodeURIComponent(type)}`;
+        const res = await fetch(url, { headers: { 'X-Requested-With': 'fetch' }});
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const html = await res.text();
+          container.innerHTML = html;
+          refreshPreviews();
+        // alert('renderer_form - END');
+      } catch (err) {
+        console.error(err);
+        alert('renderer_form - ERROR', err);
+        container.innerHTML = `
+            <div style="grid-column:1/-1;color:#b00020">
+            Nie udało się wczytać pól dla „${type}”. Spróbuj ponownie lub wybierz inny backend.
+            </div>`;
+      }
+  }
+
+  function setTransitionsForBackend(backend) {
+    alert('setTransitionsForBackend');
+    if (!xfadeSelect) return;
+    const list = transitionsByBackend[backend] || transitionsByBackend.default;
+    const current = xfadeSelect.value;
+    xfadeSelect.innerHTML = '';
+    list.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name; opt.textContent = name;
+      xfadeSelect.appendChild(opt);
+    });
+    // zachowaj poprzedni wybór jeśli jest dostępny, inaczej ustaw 'fade' lub pierwszy
+    if (list.includes(current)) xfadeSelect.value = current;
+    else if (list.includes('fade')) xfadeSelect.value = 'fade';
+  }
+
+  // ---- events ----
+  ['project-name','renderer','format-select','video-src','image-src','audio-src','captions-src',
+    'ss-format','ss-width','ss-height','ss-callback','ss-font-family','ss-font-size','ss-font-color','ss-stroke',
+    'ss-stroke-width','ss-bg','ss-bg-opacity','local-out-name','local-burn-captions'].forEach(id=>{
+    const el = document.getElementById(id); if(el){ el.addEventListener('input', ()=>{ refreshPreviews(); saveFormState(); }); }
+  });
+  $('#renderer').addEventListener('change', toggleRendererUI);
+  $('#format-select').addEventListener('change', syncProfileDims);
+
+  const validateBtn = document.getElementById('validateBtn');
+  validateBtn?.addEventListener('click', (e) => {
+    console.log('pressed validateBtn');
+    // alert('pressed validateBtn');
+    e.preventDefault(); // na wszelki wypadek
+    const errs = requireFields();
+    if (errs.length) { $('#status').innerHTML = '<span class="err">Brak wymaganych pól:</span> '+errs.join(', '); }
+    else { $('#status').innerHTML = '<span class="ok">OK — minimalny zestaw danych jest kompletny.</span>'; }
+  });
+
+  async function checkHealthForSubmit(){
+    try{
+      const r = val('renderer');
+      const ttsVoice = (document.getElementById('tts-voice')?.value || '').trim();
+      // tylko przypadki wymagające ffmpeg (local, lub sora z lektorem)
+      const needsFfmpeg = (r==='local') || (r==='openai_sora' && !!ttsVoice);
+      if (!needsFfmpeg) return {ok:true};
+      const res = await fetch('{{ url_for("news_to_video.api_health") }}', {cache:'no-store'});
+      if (!res.ok) return {ok:false, msg:'Błąd sprawdzania środowiska (HTTP '+res.status+').'};
+      const h = await res.json();
+      if (!h.ffmpeg){ return {ok:false, msg:'Brak ffmpeg w PATH — wymagane do mux audio/wideo.'}; }
+      return {ok:true};
+    }catch(e){ return {ok:false, msg: 'Błąd sprawdzania środowiska: '+(e?.message||'nieznany')}; }
+  }
+
+  // Healthcheck środowiska (ffmpeg, API keys)
+  healthBtn?.addEventListener('click', async () => {
+    try{
+      const res = await fetch('{{ url_for("news_to_video.api_health") }}', {cache:'no-store'});
+      if (!res.ok) throw new Error('HTTP '+res.status);
+      const h = await res.json();
+      const lines = [];
+      lines.push(`<b>ffmpeg</b>: ${h.ffmpeg ? 'OK' : '<span class="err">BRAK</span>'}`);
+      lines.push(`<b>OpenAI API Key</b>: ${h.openai_api_key ? 'OK' : '<span class=\"warn\">brak</span>'}`);
+      const g = h.google_tts||{}; lines.push(`<b>Google TTS</b>: ${g.ok ? 'OK' : '<span class=\"warn\">brak</span>'}${g.creds_file ? ' ('+g.creds_file+')' : ''}`);
+      const a = h.azure_tts||{}; lines.push(`<b>Azure TTS</b>: ${(a.key && a.region) ? 'OK' : '<span class=\"warn\">brak</span>'}`);
+      const s = h.s3||{}; lines.push(`<b>S3</b>: ${(s.bucket && s.region) ? 'OK' : '<span class=\"warn\">brak</span>'}`);
+      setStatusMessage(lines.join(' <span class="muted">|</span> '));
+    }catch(e){ setStatusMessage('<span class="err">Błąd healthcheck:</span> '+(e?.message||'nieznany')); }
+  });
+
+  // global listeners for persistence
+  createForm?.addEventListener('input', saveFormState);
+  createForm?.addEventListener('change', saveFormState);
+
+  // Auto-kopiowanie: Treść → Skrypt narracji (dopóki użytkownik nie edytuje ręcznie pola narracji)
+  try {
+    const textEl = document.getElementById('text');
+    const narrEl = document.getElementById('narration_script');
+    if (narrEl) {
+      narrEl.addEventListener('input', ()=>{ narrEl.dataset.userEdited = '1'; refreshPreviews(); saveFormState(); });
+    }
+    if (textEl) {
+      textEl.addEventListener('input', ()=>{
+        if (narrEl && (narrEl.dataset.userEdited !== '1')) {
+          narrEl.value = textEl.value;
+        }
+        refreshPreviews();
+        saveFormState();
+      });
+    }
+  } catch(e) { /* noop */ }
+
+  // Restore on load
+  loadFormState();
+
+  $('#submitBtn').addEventListener('click', async (event)=>{
+    console.log('pressed submitBtn');
+    // alert('pressed submitBtn');
+    // action="{{ url_for('news_to_video.create_submit') }}"
+
+    if (submitBtn.disabled) {
+      return;
+    }
+
+    const errs = requireFields();
+    if (errs.length) { 
+      $('#status').innerHTML = '<span class="err">Uzupełnij najpierw:</span> '+errs.join(', ')+''; 
+      return; 
+    }
+
+    // Healthcheck blokujący, jeśli renderer wymaga ffmpeg
+    const hc = await checkHealthForSubmit();
+    if (!hc.ok){ setStatusMessage('<span class="err">'+hc.msg+'</span>'); return; }
+
+    const manifest = buildManifest();
+
+    console.log('manifest 1');
+    console.log(manifest);
+    // return;
+
+    // jeżeli podano nazwę projektu w polu – dołącz do manifestu
+    const projectName = (document.getElementById('project-name')?.value || '').trim();
+    if (projectName) manifest.project_id = projectName;
+    // Wymuś nazwę pliku wyjściowego z project_id dla renderer: local
+    try {
+      enforceOutputFilenameFromProjectId(manifest);
+      refreshPreviews();
+    } catch(e) { console.warn('enforceOutputFilenameFromProjectId:', e); }
+    // console.log('===> api/render <===', manifest);
+
+    const formFieldsObj = collectAllFormFields(document.getElementById('createForm'));
+
+    // modal - pokaż z pełnym JSON-em
+    $('#manifestModalContent').textContent = JSON.stringify(manifest, null, 2);
+    $('#formFieldsModalContent').textContent = JSON.stringify(formFieldsObj, null, 2);
+    // opcjonalnie: zapamiętaj dla późniejszych kroków
+    window.__lastManifestPreview__ = manifest;
+    window.__lastFormFieldsPreview__ = formFieldsObj;
+
+    $('#manifestModal').classList.remove('hidden');
+    // modal - obsługa przycisków cancell i confirm
+    $('#manifestCancelBtn').onclick = ()=> {
+      $('#manifestModal').classList.add('hidden');
+    };
+    $('#manifestConfirmBtn').onclick = async ()=> {
+      $('#manifestModal').classList.add('hidden');
+      if (!submitBtn.dataset.originalText) {
+        submitBtn.dataset.originalText = submitBtn.textContent || 'Renderuj';
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Renderuję…';
+      setStatusMessage('Wysyłam żądanie renderowania…');
+      toggleLoaderOverlay(true, LOADER_MESSAGES.queue);
+
+      // Preflight: OpenAI Sora inpainting requires reference image size == requested size
+      try {
+        const r = manifest?.payload?.renderer?.type;
+        const cfg = manifest?.payload?.renderer?.config || {};
+        if (r === 'openai_sora' && cfg.reference_image_url && cfg.size) {
+          const fit = (cfg.ref_image_fit || 'letterbox').toLowerCase();
+          const req = parseSize(cfg.size);
+          const got = await getImageSize(cfg.reference_image_url);
+          if (fit === 'match_image' && req && got && got.width && got.height && (got.width !== req.w || got.height !== req.h)) {
+            // Auto-adjust the requested size to match the reference image dims
+            cfg.size = `${got.width}x${got.height}`;
+            manifest.payload.renderer.config = cfg;
+            console.info(`[Sora] Adjusted size to match reference image: ${cfg.size}`);
+          }
+        }
+      } catch (e) { console.warn('Sora preflight failed (continuing):', e); }
+
+      let projectId = manifest.project_id || null;
+
+      let progressTimer;
       try {
         console.log("fetch('/news-to-video/api/render') ==> start");
         const res = await fetch('/news-to-video/api/render', {
-          method:'POST',
-          headers:{'Content-Type':'application/json'},
-          body: JSON.stringify(manifest)
-        });
-        if (!res.ok) throw new Error('HTTP '+res.status);
-        const data = await res.json();
-
-        projectId = data.project_id || data.project || projectId;
-        const initialStatus = (data.status || 'queued');
-        setStatusMessage(
-          'Start renderu: <span class="ok">'+initialStatus+'</span>' +
-          (projectId ? ' — <span class="mono">'+projectId+'</span>' : '')
-        );
-
-        if (!projectId) {
-          throw new Error('Brak identyfikatora projektu w odpowiedzi.');
-        }
-
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify(manifest)
+        });
+        if (!res.ok) throw new Error('HTTP '+res.status);
+        const data = await res.json();
+
+        projectId = data.project_id || data.project || projectId;
+        const initialStatus = (data.status || 'queued');
+        setStatusMessage(
+          'Start renderu: <span class="ok">'+initialStatus+'</span>' +
+          (projectId ? ' — <span class="mono">'+projectId+'</span>' : '')
+        );
+
+        if (!projectId) {
+          throw new Error('Brak identyfikatora projektu w odpowiedzi.');
+        }
+
         toggleLoaderOverlay(true, LOADER_MESSAGES.rendering);
-        const finalPayload = await waitForRenderCompletion(projectId, {}, (payload, status) => {
+        // Ustal dłuższy timeout dla zdalnych rendererów (np. Sora)
+        let __timeoutMs = 15 * 60 * 1000; // 15 min domyślnie
+        try {
+          const rType = manifest?.payload?.renderer?.type || 'local';
+          if (rType === 'openai_sora') __timeoutMs = 45 * 60 * 1000; // 45 min dla Sory
+          else if (rType !== 'local') __timeoutMs = Math.max(__timeoutMs, 30 * 60 * 1000);
+        } catch(e) { /* keep default */ }
+        const barEl = document.getElementById('loaderProgressBar');
+        const boxEl = document.getElementById('loaderProgress');
+        const txtEl = document.getElementById('loaderProgressText');
+        const t0 = Date.now();
+        let currentStatus = 'queued';
+        const clamp = (v, lo, hi)=> Math.max(lo, Math.min(hi, v));
+        const pctFor = (status, raw)=>{
+          // delikatny mapping by nie dojeżdżać do 100% przed końcem
+          if (['done','completed','complete'].includes(status)) return 100;
+          if (status === 'queued') return clamp(raw, 5, 25);
+          if (status === 'processing') return clamp(raw, 25, 90);
+          return clamp(raw, 5, 90);
+        };
+        const tickProgress = ()=>{
+          const elapsed = Date.now() - t0;
+          const raw = (elapsed/__timeoutMs)*100;
+          const pct = Math.floor(pctFor(currentStatus, raw));
+          if (barEl){ barEl.style.width = pct+'%'; }
+          if (boxEl){ boxEl.setAttribute('aria-valuenow', String(pct)); }
+          if (txtEl){
+            const remain = Math.max(0, __timeoutMs - elapsed);
+            txtEl.textContent = `Upłynęło: ${formatTime(elapsed)} — Pozostało (maks): ${formatTime(remain)}`;
+          }
+        };
+        progressTimer = setInterval(tickProgress, 1000);
+        tickProgress();
+        const finalPayload = await waitForRenderCompletion(projectId, { timeoutMs: __timeoutMs }, (payload, status) => {
+          currentStatus = status;
           if (!['done','completed','complete'].includes(status)) {
             setStatusMessage(
-              'Status renderu: <span class="muted">'+(status || 'unknown')+'</span> — <span class="mono">'+projectId+'</span>'
+              'Status renderu: <span class="muted">'+(status || 'unknown')+'</span> - <span class="mono">'+projectId+'</span>'
             );
           }
         });
-
-        const doneStatus = (finalPayload.status || 'done').toLowerCase();
-        const detailsLink = `<a href="/news-to-video/${encodeURIComponent(projectId)}" target="_blank" rel="noopener">Zobacz projekt</a>`;
-        setStatusMessage(`Render ukończony: <span class="ok">${doneStatus}</span> — ${detailsLink}`);
+
+        const doneStatus = (finalPayload.status || 'done').toLowerCase();
+        const detailsLink = `<a href="/news-to-video/${encodeURIComponent(projectId)}" target="_blank" rel="noopener">Zobacz projekt</a>`;
+        setStatusMessage(`Render ukończony: <span class="ok">${doneStatus}</span> — ${detailsLink}`);
       } catch(e) {
         console.error('Render error:', e);
         const msg = e?.message || 'Nieznany błąd.';
-        setStatusMessage('<span class="err">Błąd renderowania:</span> '+msg);
+        if (/Przekroczono czas oczekiwania/i.test(msg) && projectId) {
+          const detailsLink = `<a href="/news-to-video/${encodeURIComponent(projectId)}" target="_blank" rel="noopener">Zobacz projekt</a>`;
+          setStatusMessage('<span class="warn">Przekroczono czas oczekiwania.</span> Render może nadal trwać. ' + detailsLink);
+        } else {
+          setStatusMessage('<span class="err">Błąd renderowania:</span> '+msg);
+        }
       } finally {
+        try {
+          const barEl = document.getElementById('loaderProgressBar');
+          const boxEl = document.getElementById('loaderProgress');
+          const txtEl = document.getElementById('loaderProgressText');
+          if (barEl){ barEl.style.width = '100%'; }
+          if (boxEl){ boxEl.setAttribute('aria-valuenow', '100'); }
+          if (progressTimer) clearInterval(progressTimer);
+          if (txtEl && txtEl.textContent && /Pozostało/.test(txtEl.textContent)){
+            txtEl.textContent = txtEl.textContent.replace(/Pozostało \(maks\): .*/, 'Zakończono.');
+          }
+        } catch(_) {}
         toggleLoaderOverlay(false);
         submitBtn.disabled = false;
         submitBtn.textContent = submitBtn.dataset.originalText || 'Renderuj';
       }
-    };
-  });
+    };
+  });
+
+  $('#run-ai-promptBtn').addEventListener('click', async ()=>{
+    try{
+      const sel = $('#prompt-select');
+      const chosen = sel.options[sel.selectedIndex];
+      const system_prompt = 'News→Video assistant';
+      const user_prompt = chosen?.dataset?.text || $('#prompt-text').value || '';
+      if(!user_prompt){ $('#status').innerHTML = '<span class="warn">Wybierz lub wpisz prompt.</span>'; return; }
+      // pobierz dane ze scrap_page_view jeżeli dostępne globalnie
+      const scrapData = window.__SCRAP_DATA__ || null; // oczekujemy aby backend wstrzyknął te dane
+      const body = { system_prompt, user_prompt, data: scrapData };
+      // alert("fetch('/news-to-video/api/ask-model')");
+      const res = await fetch('/news-to-video/api/ask-model', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const data = await res.json();
+      $('#status').innerHTML = 'AI wynik otrzymany. <span class="muted">(szkic scenariusza zapisany w projekcie)</span>';
+      console.log('ask_model result:', data);
+    }catch(e){ $('#status').innerHTML = '<span class="err">Błąd wywołania AI:</span> '+e.message+''; }
+  });
+  $('#tts-provider').addEventListener('change', (e)=> loadVoices(e.target.value));
+
+  const rendererSel = document.getElementById('renderer');
+  if (rendererSel) {
+    rendererSel.addEventListener('change', async (e) => {
+      await loadRendererFields(e.target.value);
+      syncProfileDims();   // dopiero po wstrzyknięciu pól
+      refreshPreviews();
+    });
+    // inicjalizacja
+    loadRendererFields(rendererSel.value).then(() => {
+      syncProfileDims();
+      refreshPreviews();
+    });
+  }
+
+  // Hook do istniejącej logiki ładowania pól
+  const rendererSel2 = document.getElementById('renderer_type');
+  if (rendererSel2) {
+    rendererSel2.addEventListener('change', e => {
+      const backend = e.target.value;
+      setTransitionsForBackend(backend === 'shotstack' ? 'shotstack' : (backend === 'local' ? 'local' : 'shotstack'));
+      // uwaga: dla zdalnych backendów trzymamy bezpieczną listę shotstack, żeby nie wpaść na niewspierane
+      refreshPreviews();
+    });
+    // init
+    const initBackend = rendererSel2.value;
+    setTransitionsForBackend(initBackend === 'shotstack' ? 'shotstack' : (initBackend === 'local' ? 'local' : 'shotstack'));
+  }
+
+  
+  // Odświeżaj szkice po opuszczeniu / zmianie dowolnego pola
+  (function bindPreviewRefresh(){
+    document.querySelectorAll('input, textarea, select').forEach(el=>{
+      el.addEventListener('blur', refreshPreviews);
+      el.addEventListener('change', refreshPreviews);
+      el.addEventListener('input', (e)=>{
+        // dla textarea media_urls realtime now-line
+        if (e.target && e.target.id === 'media_urls') refreshPreviews();
+      });
+    });
+    refreshPreviews();
+  })();
+
+  // Auto-uzupełnianie nazwy pliku po zmianie project_id i ręczne nadpisanie przez usera
+  (function bindOutputFilenameAutofill(){
+    const pidEl = document.getElementById('project-name');
+    const outEl = document.getElementById('local-out-name');
+    if (!outEl) return;
+    // flaga: jeśli user coś wpisze ręcznie, już nie nadpisujemy automatycznie
+    outEl.addEventListener('input', ()=> { outEl.dataset.autoset = 'false'; });
+    if (pidEl){
+      pidEl.addEventListener('input', ()=>{
+        if (outEl.dataset.autoset !== 'false'){ // tylko gdy nie nadpisane ręcznie
+          const base = safeFilenameBase(pidEl.value);
+          const fname = base ? `${base}.mp4` : 'output.mp4';
+          outEl.value = fname;
+          outEl.dataset.autoset = 'true';
+          refreshPreviews();
+        }
+      });
+      // inicjalnie ustaw jeśli puste
+      if (!outEl.value){
+        const base = safeFilenameBase(pidEl.value);
+        outEl.value = base ? `${base}.mp4` : 'output.mp4';
+        outEl.dataset.autoset = 'true';
+      }
+    }
+  })();
+
+  // scrapBtn.addEventListener
+  if (scrapBtn) {
+      scrapBtn.addEventListener('click', async ()=> {
+          // alert('aaaaaaaaa ==> scrapBtn')
+          console.log('pressed scrapBtn')
+          // pokaż loader na przycisku
+          scrapBtn.disabled = true;
+          const orig = scrapBtn.textContent;
+          scrapBtn.textContent = '⏳ Pobieram…';
+          try {
+              await scrapAndFill();
+          } finally {
+              scrapBtn.disabled = false;
+              scrapBtn.textContent = orig;
+          }
+      });
+  }
+
+
+  // == funkcje nieuzywane / przedawnione
+  function getCheckedValues(name) {
+    alert('Nieuzywana funkcja getCheckedValues()')
+    return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el=>el.value);
+  }
+
+  function collectRendererSpecific() {
+    alert('Nieuzywana funkcja collectRendererSpecific()')
+    const box = document.getElementById('renderer_fields');
+    const out = {};
+    if (!box) return out;
+    box.querySelectorAll('input, select, textarea').forEach(el=>{
+      if (!el.name) return;
+      if (el.type === 'checkbox') out[el.name] = !!el.checked;
+      else out[el.name] = el.value;
+    });
+    return out;
+  }
+
+  function buildPayload() {
+    alert('buildPayload()')
+    const renderer = val('renderer');
+    const project = val('project-name');
+    const profile = val('format-select');
+    const fps = Number(val('fps')) || 25;
+    const duration = val('duration');
+    const video = val('video-src');
+    const image = val('image-src');
+    const audio = val('audio-src');
+    const captions = val('captions-src');
+
+    // Minimalny poprawny JSON dla local / Shotstack
+    if (renderer==='local') {
+      // Minimalny payload dla renderer "local" — dopasuj pod backend
+      const payload = {
+        project, profile, renderer:'local', fps,
+        output: { filename: val('local-out-name') || 'output.mp4' },
+        sources: {}
+      };
+      if(video) payload.sources.video = { src: video, start:0 };
+      if(image) payload.sources.image = { src: image, length: Number(duration)||5 };
+      if(audio) payload.sources.audio = { src: audio };
+      if(captions) payload.captions = { src: captions, burn: $('#local-burn-captions').checked };
+      if(duration) payload.duration = Number(duration);
+      return payload;
+    }    
+    if (renderer==='shotstack') {
+      // Minimalny poprawny JSON dla Shotstack z wideo/obrazem + opcjonalnymi napisami
+      const tracks = [];
+      if(captions){
+        const capAsset = { type:'caption', src: captions };
+        const fontFamily = val('ss-font-family');
+        const fontSize = Number(val('ss-font-size')); const color = val('ss-font-color');
+        const stroke = val('ss-stroke'); const strokeWidth = Number(val('ss-stroke-width'));
+        if(fontFamily || fontSize || color || stroke || strokeWidth){
+          capAsset.font = {};
+          if(color) capAsset.font.color = color;
+          if(fontFamily) capAsset.font.family = fontFamily;
+          if(fontSize) capAsset.font.size = fontSize;
+          if(stroke) capAsset.font.stroke = stroke;
+          if(strokeWidth) capAsset.font.strokeWidth = strokeWidth;
+        }
+        const bg = val('ss-bg'); const op = Number(val('ss-bg-opacity'));
+        if(bg){ capAsset.background = { color: bg }; if(!Number.isNaN(op)) capAsset.background.opacity = op; }
+
+        tracks.push({ clips:[{ asset: capAsset, start:0, length:'end' }] });
+      }
+      if(video){
+        tracks.push({ clips:[{ asset:{ type:'video', src: video }, start:0, length:'auto', alias:'bgvideo' }] });
+      } else if(image){
+        tracks.push({ clips:[{ asset:{ type:'image', src: image }, start:0, length: Number(duration)||5 }] });
+      }
+      const out = {
+        format: val('ss-format') || 'mp4',
+        size: { width: Number(val('ss-width'))||1920, height: Number(val('ss-height'))||1080 },
+        fps
+      };
+      const payload = { 
+        project, 
+        profile, 
+        renderer:'shotstack', 
+        timeline:{ tracks }, 
+        output: out 
+      };
+      const cb = val('ss-callback'); if(cb) payload.callback = cb;
+
+      alert(payload);
+
+      return payload;
+
+    }
+  }
+  // == funkcje nieuzywane / przedawnione
+
+
+  // ===== PREVIEWS (payload + manifest) =====
+  function linesToArray(val) {
+    return (val || '').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  }
+  function guessMediaType(src) {
+    const s = (src||'').toLowerCase();
+    if (/\.(mp4|mov|m4v|webm)(\?|$)/.test(s)) return 'video';
+    if (/\.(mp3|wav|m4a|aac)(\?|$)/.test(s)) return 'audio';
+    if (/\.(srt|vtt)(\?|$)/.test(s)) return 'caption';
+    return 'image';
+  }  
+  // utils do generowania nazwy pliku wynikowego video
+  function safeFilenameBase(s) {
+    return (s || '').toString().trim().toLowerCase()
+      .replace(/[^a-z0-9._-]+/g,'-')
+      .replace(/^-+|-+$/g,'') || 'output';
+  }
+  // utils do generowania nazwy pliku na podstawie project_id
+  function enforceOutputFilenameFromProjectId(manifest) {
+    if (!manifest || !manifest.payload || !manifest.payload.renderer) return;
+    const r = manifest.payload.renderer;
+    if (r.type !== 'local') return;
+    const pid = manifest.project_id || '';
+    const base = safeFilenameBase(pid);
+    // jeśli użytkownik nie nadpisał ręcznie albo pole puste – ustaw automatycznie
+    const outEl = document.getElementById('local-out-name');
+    const userOverridden = outEl && outEl.dataset.autoset === 'false';
+    r.config = r.config || {};
+    r.config.output = r.config.output || {};
+    if (!userOverridden) {
+      const fname = (base ? `${base}.mp4` : (r.config.output.filename || 'output.mp4'));
+      r.config.output.filename = fname;
+      if (outEl) { outEl.value = fname; outEl.dataset.autoset = 'true'; }
+    }
+  }
+  // utils do generowania danych do pliku manifest.json
+
+  function buildManifest() {
+    console.log('buildManifest 1')
+    // źródło
+    const source_url = (scrapUrlInput && scrapUrlInput.value || '').trim();
+    // Pola treści
+    const title = $('#title')?.value?.trim() || '';
+    const text  = $('#text')?.value?.trim()  || '';
+    const narration_script = $('#narration_script')?.value?.trim() || '';
+    const numOrNull = (val, fallback=null) => {
+      if (val === undefined || val === null) return fallback;
+      if (typeof val === 'string' && val.trim() === '') return fallback;
+      const n = Number(val);
+      return Number.isFinite(n) ? n : fallback;
+    };
+    // Media (z textarea)
+    const media_urls = linesToArray($('#media_urls')?.value || '');
+    const media = media_urls.map(src => ({ type: guessMediaType(src), src }));
+    // Renderer i jego konfiguracja
+    const renderer_type = $('#renderer')?.value || 'local';
+    // console.log(`renderer_type=${renderer_type}`);
+    const renderer_config = (()=>{
+      if (renderer_type === 'shotstack') {
+        const fps = numOrNull($('#fps')?.value, 25) || 25;
+        const template = {
+          font_src: $('#ss-font-src')?.value || '',
+          caption: {
+            font_family: $('#ss-font-family')?.value || '',
+            font_size: numOrNull($('#ss-font-size')?.value),
+            line_height: numOrNull($('#ss-font-lineheight')?.value),
+            color: $('#ss-font-color')?.value || '',
+            background: {
+              color: $('#ss-bg')?.value || '',
+              opacity: numOrNull($('#ss-bg-opacity')?.value),
+              borderRadius: numOrNull($('#ss-bg-radius')?.value),
+              padding: numOrNull($('#ss-bg-padding')?.value)
+            },
+            stroke: {
+              color: $('#ss-stroke')?.value || '',
+              width: numOrNull($('#ss-stroke-width')?.value)
+            }
+          },
+          title: {
+            font_family: $('#ss-title-font-family')?.value || '',
+            font_size: numOrNull($('#ss-title-font-size')?.value),
+            color: $('#ss-title-font-color')?.value || '',
+            width: 960,
+            height: 300,
+            offset: { x: 0, y: -0.343 },
+            position: 'center',
+            alignment: { horizontal: 'left', vertical: 'bottom' }
+          },
+          subtitle: {
+            font_family: $('#ss-title-font-family')?.value || '',
+            font_size: numOrNull($('#ss-subtitle-font-size')?.value),
+            color: $('#ss-subtitle-font-color')?.value || '',
+            width: 960,
+            height: 100,
+            offset: { x: 0, y: -0.447 },
+            position: 'center',
+            alignment: { horizontal: 'left', vertical: 'center' },
+            text: $('#ss-subtitle-text')?.value || ''
+          },
+          logo: {
+            src: $('#ss-logo-src')?.value || '',
+            scale: numOrNull($('#ss-logo-scale')?.value),
+            offset: {
+              x: numOrNull($('#ss-logo-offset-x')?.value),
+              y: numOrNull($('#ss-logo-offset-y')?.value)
+            },
+            position: 'center'
+          },
+          overlays: {
+            foreground: {
+              src: $('#ss-overlay-foreground')?.value || '',
+              opacity: numOrNull($('#ss-overlay-opacity')?.value),
+              scale: numOrNull($('#ss-overlay-scale')?.value),
+              offset: {
+                x: numOrNull($('#ss-overlay-offset-x')?.value),
+                y: numOrNull($('#ss-overlay-offset-y')?.value)
+              },
+              position: 'center'
+            }
+          },
+          luma_src: $('#ss-luma-src')?.value || '',
+          slide: {
+            length: numOrNull($('#ss-slide-length')?.value),
+            overlap: numOrNull($('#ss-slide-overlap')?.value),
+            offset_from: numOrNull($('#ss-slide-offset-from')?.value),
+            offset_to: numOrNull($('#ss-slide-offset-to')?.value)
+          }
+        };
+        const cfg = {
+          output: {
+            format: $('#ss-format')?.value || 'mp4',
+            size: {
+              width: numOrNull($('#ss-width')?.value, 1080) || 1080,
+              height: numOrNull($('#ss-height')?.value, 1920) || 1920
+            },
+            fps
+          },
+          callback: $('#ss-callback')?.value || null,
+          template
+        };
+        return cfg;
+      }
+      if (renderer_type === 'openai_sora') {
+        return {
+          api_key: ($('#sora-api-key')?.value || '').trim(),
+          model: $('#sora-model')?.value || 'sora-2',
+          seconds: $('#sora-seconds')?.value || '8',
+          size: defaultSoraSizeForFormat($('#format-select')?.value),
+          ref_image_fit: $('#sora-ref-fit')?.value || 'letterbox',
+          post_branding: Boolean(document.getElementById('sora-post-branding')?.checked),
+          prompt_template: $('#sora-prompt-template')?.value || '',
+          style_notes: $('#sora-style-notes')?.value || '',
+          extra_instructions: $('#sora-extra-instructions')?.value || '',
+          avoid_list: $('#sora-avoid-list')?.value || '',
+          reference_image_url: ($('#sora-reference-image')?.value || '').trim(),
+          use_article_cover: Boolean(document.getElementById('sora-use-article-cover')?.checked),
+          save_thumbnail: Boolean(document.getElementById('sora-save-thumbnail')?.checked),
+        };
+      }
+      // local
+      return {
+        output: { filename: $('#local-out-name')?.value || 'output.mp4' },
+        fps: Number($('#fps')?.value || 25),
+        burn_captions: $('#local-burn-captions')?.checked || false
+      };
+    })();
+
+    // TTS
+    const tts = {
+      language: $('#tts-lang')?.value || 'pl',
+      provider: $('#tts-provider')?.value || 'google',
+      speed: Number($('#tts-speed')?.value || 1.1),
+      voice: $('#tts-voice')?.value || ''
+    };
+    // alert(tts.voice)
+    // Brand (logo)
+    const brand = {
+      logo_path: $('#logo-url')?.value || '', // w runtime możesz zamienić na ścieżkę localną
+      opacity: Number($('#logo-opacity')?.value || 0.85),
+      position: $('#logo-position')?.value || 'top-right',
+      scale: Number($('#logo-scale')?.value || 0.15)
+    };
+    // Format(y) i efekty
+    const formats = [$('#format-select')?.value || '16x9'];
+    const transitions = {
+      use_xfade: $('#xfade-use')?.checked || false,
+      transition: $('#xfade-transition')?.value || 'fade',
+      duration: Number($('#xfade-duration')?.value || 1.5)
+    };
+    const subtitles = { burn_in: $('#sub-burn')?.checked || false };
+    // Złożenie payloadu w stylu poprzedniego manifestu
+    const payload = {
+      title,
+      text,
+      media,
+      formats,
+      renderer: { type: renderer_type, config: renderer_config },
+      subtitles,
+      transitions,
+      tts,
+      brand
+    };
+    if (narration_script) payload.narration_script = narration_script;
+    console.log(`renderer_type=${renderer_type}\npayload.tts.voice=${payload.tts.voice}`);
+    return {
+      created_at: new Date().toISOString() + 'Z',
+      error: null,
+      logs: [],
+      outputs: {},               // wypełni się po renderze
+      payload,
+      project_id: null,          // nadawany po stronie backendu
+      status: 'draft',
+      title
+    };
+  }
+
+  
+  loadPrompts();
+  refreshPreviews();
+  </script>
+
+  <script>
+  /** usuwa niedozwolone transition.duration i opcjonalnie zamienia na fadeSlow/fadeFast */
+  function sanitizeTransitions(manifest, opts={ mapDuration:false }) {
+    if (!manifest || !manifest.timeline) return manifest;
+    const tracks = manifest.timeline.tracks || [];
+    tracks.forEach((t, ti) => {
+      (t.clips || []).forEach((c, ci) => {
+        const tr = c.transition;
+        if (tr && typeof tr === 'object') {
+          if ('duration' in tr) {
+            const dur = tr.duration;
+            delete tr.duration; // Shotstack tego nie akceptuje
+            // opcjonalna mapa: jeśli włączona, podmień 'fade' na slow/fast wg duration
+            if (opts.mapDuration && (tr.in || tr.out)) {
+              ['in','out'].forEach(k=>{
+                if (!tr[k]) return;
+                // tylko dla fade: mapuj na slow/fast według progów
+                const name = String(tr[k]).toLowerCase();
+                if (name === 'fade') {
+                  if (typeof dur === 'number') {
+                    if (dur >= 0.9) tr[k] = 'fadeSlow';
+                    else if (dur <= 0.35) tr[k] = 'fadeFast';
+                    // w przedziale (0.35, 0.9) zostaw 'fade'
+                  }
+                }
+              });
+            }
+            console.debug(`[sanitizeTransitions] removed duration at tracks[${ti}].clips[${ci}].transition`);
+          }
+        }
+      });
+    });
+    return manifest;
+  }
+
+  /** szybka pre-walidacja: zwraca listę ostrzeżeń/błędów dot. Shotstack */
+  function validateShotstackManifest(manifest){
+    const errs = [];
+    if (!manifest || typeof manifest !== 'object') {
+      errs.push('Manifest jest pusty lub nie jest obiektem.');
+      return errs;
+    }
+    if (!manifest.timeline) errs.push('Brak pola "timeline".');
+    if (!manifest.output) errs.push('Brak pola "output".');
+
+    const tracks = manifest.timeline?.tracks || [];
+    tracks.forEach((t, ti)=>{
+      (t.clips || []).forEach((c, ci)=>{
+        if (c.transition && 'duration' in c.transition) {
+          errs.push(`timeline.tracks[${ti}].clips[${ci}].transition.duration — niedozwolone pole.`);
+        }
+      });
+    });
+    return errs;
+  }
+
+  /** ładne formatowanie JSON (bez „miękkich” zamian) */
+  function prettyJSON(obj){
+    try { return JSON.stringify(obj, null, 2); } catch { return ''; }
+  }
+
+  /** pokaż komunikat w Twoim status/alert UI */
+  function showFormStatus(msg, kind='info'){
+    // dopasuj do swoich klas/komponentów statusu
+    const el = document.querySelector('#formStatus') || document.querySelector('#status');
+    if (!el) return;
+    const colors = { ok:'#1fbf75', error:'#ff5a5a', warn:'#ffb84a', info:'#9fb0c3' };
+    el.innerHTML = `<span style="color:${colors[kind]||colors.info}">${msg}</span>`;
+  }
+
+  </script>
+
+
+buildManifest 1
+create:2156 renderer_type=local
+payload.tts.voice=pl-PL-Chirp3-HD-Achernar
+create:1808 fetch('/news-to-video/api/render') ==> 1 
+$('#submitBtn').addEventListener('click')
+create:2278 fetch('/news-to-video/api/render') 2 
+async function startRender
+
+  <script>
+  // (() => {
+  //   // const $ = (sel, root=document) => root.querySelector(sel);
+  //   // === helpers ===
+  //   function showLoader(on) {
+  //     const overlay = $("#loaderOverlay");
+  //     if (!overlay) return;
+  //     overlay.style.display = on ? "flex" : "none";
+  //   }
+
+  //   function findBestVideoUrl(outputs) {
+  //     if (!outputs) return null;
+  //     // priorytetyzuj 16:9 → 1:1 → 9:16 → pierwszy mp4_*
+  //     const order = ["mp4_16x9", "mp4_1x1", "mp4_9x16"];
+  //     for (const k of order) if (outputs[k]) return outputs[k];
+  //     for (const k of Object.keys(outputs)) {
+  //       if (k.startsWith("mp4_") && outputs[k]) return outputs[k];
+  //     }
+  //     return null;
+  //   }
+
+  //   function videoHTML(src) {
+  //     // responsywne wideo w modalu
+  //     return `
+  //       <div class="video-wrap" style="position:relative;width:100%;max-width:900px;margin:0 auto;">
+  //         <video src="${src}" controls autoplay style="width:100%;height:auto;border-radius:12px;"></video>
+  //       </div>
+  //     `;
+  //   }
+
+  //   async function startRender(manifest) {
+  //     // POST do API renderu
+  //     console.log("fetch('/news-to-video/api/render') 2 \nasync function startRender");
+  //     const res = await fetch("/news-to-video/api/render", {
+  //       method: "POST",
+  //       headers: {"Content-Type": "application/json"},
+  //       body: JSON.stringify(manifest || {})
+  //     });
+  //     if (!res.ok) throw new Error("Render HTTP " + res.status);
+  //     const data = await res.json();
+  //     // spróbuj kilku możliwych pól identyfikatora
+  //     const pid = data.pid || data.project_id || data.id || data.project || null;
+  //     if (!pid) throw new Error("Brak identyfikatora zadania renderu (pid).");
+  //     return { pid, data };
+  //   }
+
+  //   async function pollUntilDone(pid, {interval=2000, timeout=15*60*1000} = {}) {
+  //     const t0 = Date.now();
+  //     while (true) {
+  //       const res = await fetch(`/news-to-video/api/status/${encodeURIComponent(pid)}?t=${Date.now()}`, {cache:'no-store'});
+  //       if (!res.ok) throw new Error("Status HTTP " + res.status);
+  //       const st = await res.json();
+
+  //       const status = (st.status || "unknown").toLowerCase();
+  //       // opcjonalnie: aktualizuj jakiś badge, pasek postępu itp.
+  //       // setBadge && setBadge(status);
+
+  //       if (status === "done" || status === "completed" || status === "complete") {
+  //         return st; // zawiera outputs
+  //       }
+  //       if (status === "failed" || status === "error") {
+  //         const msg = st.message || st.error || "Render zakończony błędem.";
+  //         throw new Error(msg);
+  //       }
+  //       if (Date.now() - t0 > timeout) {
+  //         throw new Error("Przekroczono czas oczekiwania na render.");
+  //       }
+  //       await new Promise(r => setTimeout(r, interval));
+  //       // delikatny backoff
+  //       interval = Math.min(6000, interval + 400);
+  //     }
+  //   }
+
+  //   function showVideoInManifestModal(url) {
+  //     const modal = $("#manifestModal");
+  //     if (!modal) return;
+  //     const body = modal.querySelector(".modal-body") || modal; // dopasuj do swojej struktury
+  //     body.innerHTML = videoHTML(url);
+  //   }
+
+  //   // === GŁÓWNY HANDLER PRZYCISKU POTWIERDZENIA MANIFESTU ===
+  //   async function onManifestConfirmClick(ev) {
+  //     try {
+  //       ev.preventDefault();
+
+  //       // 1) pokaż loader
+  //       showLoader(true);
+
+  //       // 2) zbierz manifest z Twojej logiki (przykład: z globalnej zmiennej lub funkcji)
+  //       //    Jeśli już wcześniej pokazywałeś „podgląd manifestu” w modalu, użyj tej samej struktury.
+  //       const manifest = window.__lastManifestPreview__ || {};
+
+  //       // 3) odpal render
+  //       const { pid } = await startRender(manifest);
+
+  //       // 4) polluj status
+  //       const done = await pollUntilDone(pid);
+
+  //       // 5) znajdź najlepszy mp4 i wstaw do modala
+  //       const best = findBestVideoUrl(done.outputs || {});
+  //       if (!best) throw new Error("Render zakończony, ale nie znaleziono URL wideo w outputs.");
+
+  //       showVideoInManifestModal(best);
+
+  //     } catch (err) {
+  //       console.error(err);
+  //       // pokaż błąd w modalu (zamiast zostawiać loader)
+  //       const modal = $("#manifestModal");
+  //       if (modal) {
+  //         const body = modal.querySelector(".modal-body") || modal;
+  //         body.innerHTML = `
+  //           <div class="error" style="color:#b00020">
+  //             <p><strong>Błąd:</strong> ${String(err.message || err)}</p>
+  //             <p>Sprawdź logi serwera lub spróbuj ponownie.</p>
+  //           </div>
+  //         `;
+  //       }
+  //     } finally {
+  //       // 6) ukryj loader (wideo już jest w modalu)
+  //       showLoader(false);
+  //     }
+  //   }
+
+  //   // podpięcie zdarzenia
+  //   document.addEventListener("click", (e) => {
+  //     const btn = e.target.closest("#manifestConfirmBtn");
+  //     if (btn) onManifestConfirmClick(e);
+  //   });
+
+  // })();
+  </script>
+  
+
+  <script>
+    /* =========================
+    Ustawienia selektorów
+    ========================= */
+    const SEL = {
+    // przycisk sprawdzenia wymagań (jeśli nie masz – zostaw, kod zadziała bez niego)
+    checkBtn: '#checkRequiredBtn',
+    // przycisk renderowania
+    renderBtn: '#renderBtn',
+    // pola, w których MOŻE znajdować się manifest (wspieramy oba warianty)
+    manifestTextareas: ['#manifest_json', '#payload'],
+    // miejsce na statusy
+    status: '#formStatus',
+    // podgląd
+    preview: '#manifestPreview',
+    // checkbox mapowania duration
+    mapDuration: '#mapDuration'
+    };
+
+    // const $ = (s)=>document.querySelector(s);
+
+    /* =========================
+    Helpery UI
+    ========================= */
+    function setStatus(msg, kind='info'){
+    const el = $(SEL.status);
+    if (!el) return;
+    const colors = { ok:'#1fbf75', error:'#ff5a5a', warn:'#ffb84a', info:'#9fb0c3' };
+    el.innerHTML = `<span style="color:${colors[kind]||colors.info}">${msg}</span>`;
+    }
+
+    function prettyJSON(obj){
+    try { return JSON.stringify(obj, null, 2); } catch { return ''; }
+    }
+
+    /* =========================
+    Wejście/wyjście manifestu
+    ========================= */
+    function findManifestElement(){
+    for (const sel of SEL.manifestTextareas){
+        const el = $(sel);
+        if (el) return el;
+    }
+    return null;
+    }
+
+    function readManifestFromDOM(){
+    const el = findManifestElement();
+    if (!el) return null;
+    const raw = (el.value || el.textContent || '').trim();
+    if (!raw) return null;
+    try {
+        return JSON.parse(raw);
+    } catch {
+        // jeżeli ktoś trzyma już JS-obiekt w window.manifest — weźmy to jako fallback
+        if (window.manifest && typeof window.manifest === 'object') return window.manifest;
+        return null;
+    }
+    }
+
+    function writeManifestToDOM(manifest){
+    const el = findManifestElement();
+    if (!el) return;
+    const formatted = prettyJSON(manifest);
+    if ('value' in el) el.value = formatted; else el.textContent = formatted;
+    const pv = $(SEL.preview);
+    if (pv) pv.textContent = formatted || '{}';
+    }
+
+    /* =========================
+    Walidacja + Sanityzacja
+    ========================= */
+    function validateShotstackManifest(manifest){
+    const errs = [];
+    if (!manifest || typeof manifest !== 'object'){
+        errs.push('Manifest jest pusty lub nie jest obiektem.');
+        return errs;
+    }
+    if (!manifest.timeline) errs.push('Brak pola "timeline".');
+    if (!manifest.output) errs.push('Brak pola "output".');
+
+    const tracks = manifest.timeline?.tracks || [];
+    tracks.forEach((t, ti)=>{
+        (t.clips || []).forEach((c, ci)=>{
+        if (c.transition && 'duration' in c.transition){
+            errs.push(`timeline.tracks[${ti}].clips[${ci}].transition.duration — niedozwolone pole (Shotstack).`);
+        }
+        });
+    });
+    return errs;
+    }
+
+    /** usuwa transition.duration i (opcjonalnie) mapuje fade → fadeSlow/fadeFast wg progu */
+    function sanitizeTransitions(manifest, opts={ mapDuration:false }){
+    if (!manifest || !manifest.timeline) return manifest;
+    const tracks = manifest.timeline.tracks || [];
+    tracks.forEach((t, ti)=>{
+        (t.clips || []).forEach((c, ci)=>{
+        const tr = c.transition;
+        if (tr && typeof tr === 'object' && 'duration' in tr){
+            const dur = tr.duration;
+            delete tr.duration;
+            if (opts.mapDuration && (tr.in || tr.out)){
+            ['in','out'].forEach(k=>{
+                if (!tr[k]) return;
+                const name = String(tr[k]).toLowerCase();
+                if (name === 'fade' && typeof dur === 'number'){
+                if (dur >= 0.9) tr[k] = 'fadeSlow';
+                else if (dur <= 0.35) tr[k] = 'fadeFast';
+                }
+            });
+            }
+            console.debug(`[sanitizeTransitions] removed duration at tracks[${ti}].clips[${ci}].transition`);
+        }
+        });
+    });
+    return manifest;
+    }
+
+    /* =========================
+    Integracja z istniejącym flow
+    ========================= */
+
+    /** 1) Hook do „Sprawdź wymagane pola” (jeśli masz taki przycisk) */
+    const checkBtn = $(SEL.checkBtn);
+    if (checkBtn){
+      checkBtn.addEventListener('click', (ev)=>{
+        try{
+        // 1. odczytaj manifest (z textarea albo z window.manifest)
+        let manifest = readManifestFromDOM();
+
+        // jeżeli nie ma – spróbuj złożyć go z formularza, jeśli w projekcie masz funkcję buildera:
+        if (!manifest && typeof window.buildManifestFromForm === 'function'){
+            manifest = window.buildManifestFromForm();
+        }
+
+        if (!manifest){
+            setStatus('Brak manifestu — wprowadź dane i spróbuj ponownie.', 'warn');
+            return;
+        }
+
+        // 2. walidacja pre
+        const errsBefore = validateShotstackManifest(manifest);
+
+        // 3. sanityzacja (opcjonalne mapowanie fadeSlow/fadeFast)
+        const mapDur = $(SEL.mapDuration)?.checked ?? true;
+        const beforeStr = JSON.stringify(manifest);
+        manifest = sanitizeTransitions(manifest, { mapDuration: !!mapDur });
+        const afterStr = JSON.stringify(manifest);
+
+        // 4. walidacja post
+        const errsAfter = validateShotstackManifest(manifest);
+
+        // 5. zapis + podgląd
+        if (beforeStr !== afterStr){
+            writeManifestToDOM(manifest);
+            setStatus('Automatycznie usunięto niedozwolone pola transition.duration (i zmapowano fade na slow/fast).', 'ok');
+        } else {
+            setStatus('Manifest wygląda poprawnie (brak zmian).', 'info');
+        }
+
+        if (errsAfter.length){
+            setStatus('Ostrzeżenia: \n• ' + errsAfter.join('\n• '), 'warn');
+        }
+
+        const pv = $(SEL.preview);
+        if (pv) pv.textContent = prettyJSON(manifest);
+        }catch(e){
+        setStatus('Wyjątek podczas sprawdzania: ' + (e.message||e), 'error');
+        }
+    });
+    }
+
+    
+    /** 2) Hook do „Renderuj” */
+    const renderBtn = $(SEL.renderBtn);
+    if (renderBtn){
+      renderBtn.addEventListener('click', async (ev)=>{
+        try{
+        renderBtn.setAttribute('disabled', 'disabled');
+
+        // 1. odczyt/ew. zbudowanie manifestu
+        let manifest = readManifestFromDOM();
+        if (!manifest && typeof window.buildManifestFromForm === 'function'){
+            manifest = window.buildManifestFromForm();
+        }
+        if (!manifest){
+            setStatus('Nie mogę odczytać manifestu — uzupełnij formularz.', 'error');
+            renderBtn.removeAttribute('disabled');
+            return;
+        }
+
+        // 2. sanityzacja + końcowa walidacja
+        const mapDur = $(SEL.mapDuration)?.checked ?? true;
+        manifest = sanitizeTransitions(manifest, { mapDuration: !!mapDur });
+        const errs = validateShotstackManifest(manifest);
+        if (errs.length){
+            setStatus('Manifest zawiera błędy:\n• ' + errs.join('\n• '), 'error');
+            renderBtn.removeAttribute('disabled');
+            return;
+        }
+
+        // 3. zapisz z powrotem (żeby backend/preview widziały poprawioną wersję)
+        writeManifestToDOM(manifest);
+
+        // 4. wyślij do backendu (trzymamy się Twojej istniejącej ścieżki /api/render)
+        console.log("fetch('/news-to-video/api/render') 3");
+        const res = await fetch('/news-to-video/api/render', {
+            method: 'POST',
+            headers: { 'Content-Type':'application/json', 'Accept':'application/json' },
+            body: JSON.stringify({
+            // Uwaga: jeśli Twój backend nie przyjmuje „manifest” jako całości,
+            // rozbij tu na wymagane pola (np. timeline/output/profile)
+            manifest
+            })
+        });
+
+        const data = await res.json().catch(()=>({}));
+        if (!res.ok || data.ok === false){
+            setStatus('Błąd podczas zlecania renderu: ' + (data.error || res.status), 'error');
+            renderBtn.removeAttribute('disabled');
+            return;
+        }
+
+        setStatus('Zlecono render. Id: ' + (data.project || data.job_id || '—'), 'ok');
+
+        // (opcjonalnie) tutaj odpal swój poller statusu
+        // startPollingStatus(data.project ?? data.job_id);
+
+        }catch(e){
+        setStatus('Wyjątek podczas renderowania: ' + (e.message||e), 'error');
+        renderBtn.removeAttribute('disabled');
+        }
+    });
+    }
+
+
+    // Hook do istniejącej logiki ładowania pól
+    const xfadeSelect = document.querySelector('select[name="xfade_transition"]');
+    const transitionsByBackend = {
+      // Konserwatywny zestaw, zgodny z komunikatem o dopuszczalnych wartościach
+      shotstack: [
+        'none','fade','fadeSlow','fadeFast','reveal','revealSlow','revealFast',
+        'wipeLeft','wipeLeftSlow','wipeLeftFast','wipeRight','wipeRightSlow','wipeRightFast',
+        'slideLeft','slideLeftSlow','slideLeftFast','slideRight','slideRightSlow','slideRightFast',
+        'slideUp','slideUpSlow','slideUpFast','slideDown','slideDownSlow','slideDownFast',
+        'carouselLeft','carouselLeftSlow','carouselLeftFast','carouselRight','carouselRightSlow','carouselRightFast',
+        'carouselUp','carouselUpSlow','carouselUpFast','carouselDown','carouselDownSlow','carouselDownFast',
+        'shuffleTopRight','shuffleTopRightSlow','shuffleTopRightFast',
+        'shuffleRightTop','shuffleRightTopSlow','shuffleRightTopFast',
+        'shuffleRightBottom','shuffleRightBottomSlow','shuffleRightBottomFast',
+        'shuffleBottomRight','shuffleBottomRightSlow','shuffleBottomRightFast',
+        'shuffleBottomLeft','shuffleBottomLeftSlow','shuffleBottomLeftFast'
+      ],
+      local: ['fade','smoothleft','wipeleft','squeezeh'], // Twoje dotychczasowe, lokalne
+      default: ['fade'] // fallback
+    };
+    function setTransitionsForBackend(backend) {
+      if (!xfadeSelect) return;
+      const list = transitionsByBackend[backend] || transitionsByBackend.default;
+      const current = xfadeSelect.value;
+      xfadeSelect.innerHTML = '';
+      list.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name; opt.textContent = name;
+        xfadeSelect.appendChild(opt);
+      });
+      // zachowaj poprzedni wybór jeśli jest dostępny, inaczej ustaw 'fade' lub pierwszy
+      if (list.includes(current)) xfadeSelect.value = current;
+      else if (list.includes('fade')) xfadeSelect.value = 'fade';
+    }
+    const rendererSel3 = document.getElementById('renderer_type');
+    if (rendererSel3) {
+      rendererSel3.addEventListener('change', e => {
+        const backend = e.target.value;
+        setTransitionsForBackend(backend === 'shotstack' ? 'shotstack' : (backend === 'local' ? 'local' : 'shotstack'));
+        // uwaga: dla zdalnych backendów trzymamy bezpieczną listę shotstack, żeby nie wpaść na niewspierane
+      });
+      // init
+      const initBackend = rendererSel3.value;
+      setTransitionsForBackend(initBackend === 'shotstack' ? 'shotstack' : (initBackend === 'local' ? 'local' : 'shotstack'));
+    }
+
+
+  </script>
+
+  <script>
+    function collectAllFormFields(formEl){
+      const out = {};
+      if (!formEl) return out;
+
+      const els = formEl.querySelectorAll('input, select, textarea');
+      els.forEach(el => {
+        // Pomijamy przyciski
+        if (el.type === 'button' || el.type === 'submit' || el.type === 'reset') return;
+
+        const key = (el.name || el.id || '').trim();
+        if (!key) return; // brak identyfikatora
+
+        // CHECKBOX
+        if (el.type === 'checkbox') {
+          // Zbierz wiele checkboxów pod jedną nazwą jako tablicę true/values,
+          // ale jeśli checkboxy nie mają sensownej wartości – zwróć boolean.
+          const val = (el.value && el.value !== 'on') ? el.value : true;
+          if (el.checked) {
+            if (out[key] === undefined) out[key] = [];
+            if (!Array.isArray(out[key])) out[key] = [out[key]];
+            out[key].push(val);
+          } else {
+            // jeśli nic nie zaznaczonego nie ma, ustaw false, ale tylko gdy jeszcze nie ma wartości
+            if (out[key] === undefined) out[key] = false;
+          }
+          return;
+        }
+
+        // RADIO
+        if (el.type === 'radio') {
+          if (el.checked) out[key] = el.value;
+          else if (out[key] === undefined) out[key] = null; // pokaż, że istnieje grupa, ale brak wyboru
+          return;
+        }
+
+        // POZOSTAŁE
+        out[key] = el.value;
+      });
+
+      // Uporządkuj: jeśli jakiś checkbox miał tylko jedną wartość w tablicy – spłaszcz
+      Object.keys(out).forEach(k => {
+        if (Array.isArray(out[k]) && out[k].length === 1) out[k] = out[k][0];
+      });
+
+      return out;
+    }
+
+    function pretty(obj){ try { return JSON.stringify(obj, null, 2); } catch { return ''; } }
+
+  </script>
+
+{% endblock %}
+
 
-  $('#run-ai-promptBtn').addEventListener('click', async ()=>{
-    try{
-      const sel = $('#prompt-select');
-      const chosen = sel.options[sel.selectedIndex];
-      const system_prompt = 'News→Video assistant';
-      const user_prompt = chosen?.dataset?.text || $('#prompt-text').value || '';
-      if(!user_prompt){ $('#status').innerHTML = '<span class="warn">Wybierz lub wpisz prompt.</span>'; return; }
-      // pobierz dane ze scrap_page_view jeżeli dostępne globalnie
-      const scrapData = window.__SCRAP_DATA__ || null; // oczekujemy aby backend wstrzyknął te dane
-      const body = { system_prompt, user_prompt, data: scrapData };
-      // alert("fetch('/news-to-video/api/ask-model')");
-      const res = await fetch('/news-to-video/api/ask-model', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
-      if(!res.ok) throw new Error('HTTP '+res.status);
-      const data = await res.json();
-      $('#status').innerHTML = 'AI wynik otrzymany. <span class="muted">(szkic scenariusza zapisany w projekcie)</span>';
-      console.log('ask_model result:', data);
-    }catch(e){ $('#status').innerHTML = '<span class="err">Błąd wywołania AI:</span> '+e.message+''; }
-  });
-  $('#tts-provider').addEventListener('change', (e)=> loadVoices(e.target.value));
 
-  const rendererSel = document.getElementById('renderer');
-  if (rendererSel) {
-    rendererSel.addEventListener('change', async (e) => {
-      await loadRendererFields(e.target.value);
-      syncProfileDims();   // dopiero po wstrzyknięciu pól
-      refreshPreviews();
-    });
-    // inicjalizacja
-    loadRendererFields(rendererSel.value).then(() => {
-      syncProfileDims();
-      refreshPreviews();
-    });
-  }
 
-  // Hook do istniejącej logiki ładowania pól
-  const rendererSel2 = document.getElementById('renderer_type');
-  if (rendererSel2) {
-    rendererSel2.addEventListener('change', e => {
-      const backend = e.target.value;
-      setTransitionsForBackend(backend === 'shotstack' ? 'shotstack' : (backend === 'local' ? 'local' : 'shotstack'));
-      // uwaga: dla zdalnych backendów trzymamy bezpieczną listę shotstack, żeby nie wpaść na niewspierane
-      refreshPreviews();
-    });
-    // init
-    const initBackend = rendererSel2.value;
-    setTransitionsForBackend(initBackend === 'shotstack' ? 'shotstack' : (initBackend === 'local' ? 'local' : 'shotstack'));
-  }
 
-  
-  // Odświeżaj szkice po opuszczeniu / zmianie dowolnego pola
-  (function bindPreviewRefresh(){
-    document.querySelectorAll('input, textarea, select').forEach(el=>{
-      el.addEventListener('blur', refreshPreviews);
-      el.addEventListener('change', refreshPreviews);
-      el.addEventListener('input', (e)=>{
-        // dla textarea media_urls realtime now-line
-        if (e.target && e.target.id === 'media_urls') refreshPreviews();
-      });
-    });
-    refreshPreviews();
-  })();
-
-  // Auto-uzupełnianie nazwy pliku po zmianie project_id i ręczne nadpisanie przez usera
-  (function bindOutputFilenameAutofill(){
-    const pidEl = document.getElementById('project-name');
-    const outEl = document.getElementById('local-out-name');
-    if (!outEl) return;
-    // flaga: jeśli user coś wpisze ręcznie, już nie nadpisujemy automatycznie
-    outEl.addEventListener('input', ()=> { outEl.dataset.autoset = 'false'; });
-    if (pidEl){
-      pidEl.addEventListener('input', ()=>{
-        if (outEl.dataset.autoset !== 'false'){ // tylko gdy nie nadpisane ręcznie
-          const base = safeFilenameBase(pidEl.value);
-          const fname = base ? `${base}.mp4` : 'output.mp4';
-          outEl.value = fname;
-          outEl.dataset.autoset = 'true';
-          refreshPreviews();
-        }
-      });
-      // inicjalnie ustaw jeśli puste
-      if (!outEl.value){
-        const base = safeFilenameBase(pidEl.value);
-        outEl.value = base ? `${base}.mp4` : 'output.mp4';
-        outEl.dataset.autoset = 'true';
-      }
-    }
-  })();
-
-  // scrapBtn.addEventListener
-  if (scrapBtn) {
-      scrapBtn.addEventListener('click', async ()=> {
-          // alert('aaaaaaaaa ==> scrapBtn')
-          console.log('pressed scrapBtn')
-          // pokaż loader na przycisku
-          scrapBtn.disabled = true;
-          const orig = scrapBtn.textContent;
-          scrapBtn.textContent = '⏳ Pobieram…';
-          try {
-              await scrapAndFill();
-          } finally {
-              scrapBtn.disabled = false;
-              scrapBtn.textContent = orig;
-          }
-      });
-  }
-
-
-  // == funkcje nieuzywane / przedawnione
-  function getCheckedValues(name) {
-    alert('Nieuzywana funkcja getCheckedValues()')
-    return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(el=>el.value);
-  }
-
-  function collectRendererSpecific() {
-    alert('Nieuzywana funkcja collectRendererSpecific()')
-    const box = document.getElementById('renderer_fields');
-    const out = {};
-    if (!box) return out;
-    box.querySelectorAll('input, select, textarea').forEach(el=>{
-      if (!el.name) return;
-      if (el.type === 'checkbox') out[el.name] = !!el.checked;
-      else out[el.name] = el.value;
-    });
-    return out;
-  }
-
-  function buildPayload() {
-    alert('buildPayload()')
-    const renderer = val('renderer');
-    const project = val('project-name');
-    const profile = val('format-select');
-    const fps = Number(val('fps')) || 25;
-    const duration = val('duration');
-    const video = val('video-src');
-    const image = val('image-src');
-    const audio = val('audio-src');
-    const captions = val('captions-src');
-
-    // Minimalny poprawny JSON dla local / Shotstack
-    if (renderer==='local') {
-      // Minimalny payload dla renderer "local" — dopasuj pod backend
-      const payload = {
-        project, profile, renderer:'local', fps,
-        output: { filename: val('local-out-name') || 'output.mp4' },
-        sources: {}
-      };
-      if(video) payload.sources.video = { src: video, start:0 };
-      if(image) payload.sources.image = { src: image, length: Number(duration)||5 };
-      if(audio) payload.sources.audio = { src: audio };
-      if(captions) payload.captions = { src: captions, burn: $('#local-burn-captions').checked };
-      if(duration) payload.duration = Number(duration);
-      return payload;
-    }    
-    if (renderer==='shotstack') {
-      // Minimalny poprawny JSON dla Shotstack z wideo/obrazem + opcjonalnymi napisami
-      const tracks = [];
-      if(captions){
-        const capAsset = { type:'caption', src: captions };
-        const fontFamily = val('ss-font-family');
-        const fontSize = Number(val('ss-font-size')); const color = val('ss-font-color');
-        const stroke = val('ss-stroke'); const strokeWidth = Number(val('ss-stroke-width'));
-        if(fontFamily || fontSize || color || stroke || strokeWidth){
-          capAsset.font = {};
-          if(color) capAsset.font.color = color;
-          if(fontFamily) capAsset.font.family = fontFamily;
-          if(fontSize) capAsset.font.size = fontSize;
-          if(stroke) capAsset.font.stroke = stroke;
-          if(strokeWidth) capAsset.font.strokeWidth = strokeWidth;
-        }
-        const bg = val('ss-bg'); const op = Number(val('ss-bg-opacity'));
-        if(bg){ capAsset.background = { color: bg }; if(!Number.isNaN(op)) capAsset.background.opacity = op; }
-
-        tracks.push({ clips:[{ asset: capAsset, start:0, length:'end' }] });
-      }
-      if(video){
-        tracks.push({ clips:[{ asset:{ type:'video', src: video }, start:0, length:'auto', alias:'bgvideo' }] });
-      } else if(image){
-        tracks.push({ clips:[{ asset:{ type:'image', src: image }, start:0, length: Number(duration)||5 }] });
-      }
-      const out = {
-        format: val('ss-format') || 'mp4',
-        size: { width: Number(val('ss-width'))||1920, height: Number(val('ss-height'))||1080 },
-        fps
-      };
-      const payload = { 
-        project, 
-        profile, 
-        renderer:'shotstack', 
-        timeline:{ tracks }, 
-        output: out 
-      };
-      const cb = val('ss-callback'); if(cb) payload.callback = cb;
-
-      alert(payload);
-
-      return payload;
-
-    }
-  }
-  // == funkcje nieuzywane / przedawnione
-
-
-  // ===== PREVIEWS (payload + manifest) =====
-  function linesToArray(val) {
-    return (val || '').split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
-  }
-  function guessMediaType(src) {
-    const s = (src||'').toLowerCase();
-    if (/\.(mp4|mov|m4v|webm)(\?|$)/.test(s)) return 'video';
-    if (/\.(mp3|wav|m4a|aac)(\?|$)/.test(s)) return 'audio';
-    if (/\.(srt|vtt)(\?|$)/.test(s)) return 'caption';
-    return 'image';
-  }  
-  // utils do generowania nazwy pliku wynikowego video
-  function safeFilenameBase(s) {
-    return (s || '').toString().trim().toLowerCase()
-      .replace(/[^a-z0-9._-]+/g,'-')
-      .replace(/^-+|-+$/g,'') || 'output';
-  }
-  // utils do generowania nazwy pliku na podstawie project_id
-  function enforceOutputFilenameFromProjectId(manifest) {
-    if (!manifest || !manifest.payload || !manifest.payload.renderer) return;
-    const r = manifest.payload.renderer;
-    if (r.type !== 'local') return;
-    const pid = manifest.project_id || '';
-    const base = safeFilenameBase(pid);
-    // jeśli użytkownik nie nadpisał ręcznie albo pole puste – ustaw automatycznie
-    const outEl = document.getElementById('local-out-name');
-    const userOverridden = outEl && outEl.dataset.autoset === 'false';
-    r.config = r.config || {};
-    r.config.output = r.config.output || {};
-    if (!userOverridden) {
-      const fname = (base ? `${base}.mp4` : (r.config.output.filename || 'output.mp4'));
-      r.config.output.filename = fname;
-      if (outEl) { outEl.value = fname; outEl.dataset.autoset = 'true'; }
-    }
-  }
-  // utils do generowania danych do pliku manifest.json
-
-  function buildManifest() {
-    console.log('buildManifest 1')
-    // źródło
-    const source_url = (scrapUrlInput && scrapUrlInput.value || '').trim();
-    // Pola treści
-    const title = $('#title')?.value?.trim() || '';
-    const text  = $('#text')?.value?.trim()  || '';
-    const numOrNull = (val, fallback=null) => {
-      if (val === undefined || val === null) return fallback;
-      if (typeof val === 'string' && val.trim() === '') return fallback;
-      const n = Number(val);
-      return Number.isFinite(n) ? n : fallback;
-    };
-    // Media (z textarea)
-    const media_urls = linesToArray($('#media_urls')?.value || '');
-    const media = media_urls.map(src => ({ type: guessMediaType(src), src }));
-    // Renderer i jego konfiguracja
-    const renderer_type = $('#renderer')?.value || 'local';
-    // console.log(`renderer_type=${renderer_type}`);
-    const renderer_config = (()=>{
-      if (renderer_type === 'shotstack') {
-        const fps = numOrNull($('#fps')?.value, 25) || 25;
-        const template = {
-          font_src: $('#ss-font-src')?.value || '',
-          caption: {
-            font_family: $('#ss-font-family')?.value || '',
-            font_size: numOrNull($('#ss-font-size')?.value),
-            line_height: numOrNull($('#ss-font-lineheight')?.value),
-            color: $('#ss-font-color')?.value || '',
-            background: {
-              color: $('#ss-bg')?.value || '',
-              opacity: numOrNull($('#ss-bg-opacity')?.value),
-              borderRadius: numOrNull($('#ss-bg-radius')?.value),
-              padding: numOrNull($('#ss-bg-padding')?.value)
-            },
-            stroke: {
-              color: $('#ss-stroke')?.value || '',
-              width: numOrNull($('#ss-stroke-width')?.value)
-            }
-          },
-          title: {
-            font_family: $('#ss-title-font-family')?.value || '',
-            font_size: numOrNull($('#ss-title-font-size')?.value),
-            color: $('#ss-title-font-color')?.value || '',
-            width: 960,
-            height: 300,
-            offset: { x: 0, y: -0.343 },
-            position: 'center',
-            alignment: { horizontal: 'left', vertical: 'bottom' }
-          },
-          subtitle: {
-            font_family: $('#ss-title-font-family')?.value || '',
-            font_size: numOrNull($('#ss-subtitle-font-size')?.value),
-            color: $('#ss-subtitle-font-color')?.value || '',
-            width: 960,
-            height: 100,
-            offset: { x: 0, y: -0.447 },
-            position: 'center',
-            alignment: { horizontal: 'left', vertical: 'center' },
-            text: $('#ss-subtitle-text')?.value || ''
-          },
-          logo: {
-            src: $('#ss-logo-src')?.value || '',
-            scale: numOrNull($('#ss-logo-scale')?.value),
-            offset: {
-              x: numOrNull($('#ss-logo-offset-x')?.value),
-              y: numOrNull($('#ss-logo-offset-y')?.value)
-            },
-            position: 'center'
-          },
-          overlays: {
-            foreground: {
-              src: $('#ss-overlay-foreground')?.value || '',
-              opacity: numOrNull($('#ss-overlay-opacity')?.value),
-              scale: numOrNull($('#ss-overlay-scale')?.value),
-              offset: {
-                x: numOrNull($('#ss-overlay-offset-x')?.value),
-                y: numOrNull($('#ss-overlay-offset-y')?.value)
-              },
-              position: 'center'
-            }
-          },
-          luma_src: $('#ss-luma-src')?.value || '',
-          slide: {
-            length: numOrNull($('#ss-slide-length')?.value),
-            overlap: numOrNull($('#ss-slide-overlap')?.value),
-            offset_from: numOrNull($('#ss-slide-offset-from')?.value),
-            offset_to: numOrNull($('#ss-slide-offset-to')?.value)
-          }
-        };
-        const cfg = {
-          output: {
-            format: $('#ss-format')?.value || 'mp4',
-            size: {
-              width: numOrNull($('#ss-width')?.value, 1080) || 1080,
-              height: numOrNull($('#ss-height')?.value, 1920) || 1920
-            },
-            fps
-          },
-          callback: $('#ss-callback')?.value || null,
-          template
-        };
-        return cfg;
-      }
-      if (renderer_type === 'openai_sora') {
-        return {
-          api_key: ($('#sora-api-key')?.value || '').trim(),
-          model: $('#sora-model')?.value || 'sora-2',
-          seconds: $('#sora-seconds')?.value || '8',
-          size: defaultSoraSizeForFormat($('#format-select')?.value),
-          ref_image_fit: $('#sora-ref-fit')?.value || 'letterbox',
-          prompt_template: $('#sora-prompt-template')?.value || '',
-          style_notes: $('#sora-style-notes')?.value || '',
-          extra_instructions: $('#sora-extra-instructions')?.value || '',
-          avoid_list: $('#sora-avoid-list')?.value || '',
-          reference_image_url: ($('#sora-reference-image')?.value || '').trim(),
-          use_article_cover: Boolean(document.getElementById('sora-use-article-cover')?.checked),
-          save_thumbnail: Boolean(document.getElementById('sora-save-thumbnail')?.checked),
-        };
-      }
-      // local
-      return {
-        output: { filename: $('#local-out-name')?.value || 'output.mp4' },
-        fps: Number($('#fps')?.value || 25),
-        burn_captions: $('#local-burn-captions')?.checked || false
-      };
-    })();
-
-    // TTS
-    const tts = {
-      language: $('#tts-lang')?.value || 'pl',
-      provider: $('#tts-provider')?.value || 'google',
-      speed: Number($('#tts-speed')?.value || 1.1),
-      voice: $('#tts-voice')?.value || ''
-    };
-    // alert(tts.voice)
-    // Brand (logo)
-    const brand = {
-      logo_path: $('#logo-url')?.value || '', // w runtime możesz zamienić na ścieżkę localną
-      opacity: Number($('#logo-opacity')?.value || 0.85),
-      position: $('#logo-position')?.value || 'top-right',
-      scale: Number($('#logo-scale')?.value || 0.15)
-    };
-    // Format(y) i efekty
-    const formats = [$('#format-select')?.value || '16x9'];
-    const transitions = {
-      use_xfade: $('#xfade-use')?.checked || false,
-      transition: $('#xfade-transition')?.value || 'fade',
-      duration: Number($('#xfade-duration')?.value || 1.5)
-    };
-    const subtitles = { burn_in: $('#sub-burn')?.checked || false };
-    // Złożenie payloadu w stylu poprzedniego manifestu
-    const payload = {
-      title,
-      text,
-      media,
-      formats,
-      renderer: { type: renderer_type, config: renderer_config },
-      subtitles,
-      transitions,
-      tts,
-      brand
-    };
-    console.log(`renderer_type=${renderer_type}\npayload.tts.voice=${payload.tts.voice}`);
-    return {
-      created_at: new Date().toISOString() + 'Z',
-      error: null,
-      logs: [],
-      outputs: {},               // wypełni się po renderze
-      payload,
-      project_id: null,          // nadawany po stronie backendu
-      status: 'draft',
-      title
-    };
-  }
-
-  
-  loadPrompts();
-  refreshPreviews();
-  </script>
-
-  <script>
-  /** usuwa niedozwolone transition.duration i opcjonalnie zamienia na fadeSlow/fadeFast */
-  function sanitizeTransitions(manifest, opts={ mapDuration:false }) {
-    if (!manifest || !manifest.timeline) return manifest;
-    const tracks = manifest.timeline.tracks || [];
-    tracks.forEach((t, ti) => {
-      (t.clips || []).forEach((c, ci) => {
-        const tr = c.transition;
-        if (tr && typeof tr === 'object') {
-          if ('duration' in tr) {
-            const dur = tr.duration;
-            delete tr.duration; // Shotstack tego nie akceptuje
-            // opcjonalna mapa: jeśli włączona, podmień 'fade' na slow/fast wg duration
-            if (opts.mapDuration && (tr.in || tr.out)) {
-              ['in','out'].forEach(k=>{
-                if (!tr[k]) return;
-                // tylko dla fade: mapuj na slow/fast według progów
-                const name = String(tr[k]).toLowerCase();
-                if (name === 'fade') {
-                  if (typeof dur === 'number') {
-                    if (dur >= 0.9) tr[k] = 'fadeSlow';
-                    else if (dur <= 0.35) tr[k] = 'fadeFast';
-                    // w przedziale (0.35, 0.9) zostaw 'fade'
-                  }
-                }
-              });
-            }
-            console.debug(`[sanitizeTransitions] removed duration at tracks[${ti}].clips[${ci}].transition`);
-          }
-        }
-      });
-    });
-    return manifest;
-  }
-
-  /** szybka pre-walidacja: zwraca listę ostrzeżeń/błędów dot. Shotstack */
-  function validateShotstackManifest(manifest){
-    const errs = [];
-    if (!manifest || typeof manifest !== 'object') {
-      errs.push('Manifest jest pusty lub nie jest obiektem.');
-      return errs;
-    }
-    if (!manifest.timeline) errs.push('Brak pola "timeline".');
-    if (!manifest.output) errs.push('Brak pola "output".');
-
-    const tracks = manifest.timeline?.tracks || [];
-    tracks.forEach((t, ti)=>{
-      (t.clips || []).forEach((c, ci)=>{
-        if (c.transition && 'duration' in c.transition) {
-          errs.push(`timeline.tracks[${ti}].clips[${ci}].transition.duration — niedozwolone pole.`);
-        }
-      });
-    });
-    return errs;
-  }
-
-  /** ładne formatowanie JSON (bez „miękkich” zamian) */
-  function prettyJSON(obj){
-    try { return JSON.stringify(obj, null, 2); } catch { return ''; }
-  }
-
-  /** pokaż komunikat w Twoim status/alert UI */
-  function showFormStatus(msg, kind='info'){
-    // dopasuj do swoich klas/komponentów statusu
-    const el = document.querySelector('#formStatus') || document.querySelector('#status');
-    if (!el) return;
-    const colors = { ok:'#1fbf75', error:'#ff5a5a', warn:'#ffb84a', info:'#9fb0c3' };
-    el.innerHTML = `<span style="color:${colors[kind]||colors.info}">${msg}</span>`;
-  }
-
-  </script>
-
-
-buildManifest 1
-create:2156 renderer_type=local
-payload.tts.voice=pl-PL-Chirp3-HD-Achernar
-create:1808 fetch('/news-to-video/api/render') ==> 1 
-$('#submitBtn').addEventListener('click')
-create:2278 fetch('/news-to-video/api/render') 2 
-async function startRender
-
-  <script>
-  // (() => {
-  //   // const $ = (sel, root=document) => root.querySelector(sel);
-  //   // === helpers ===
-  //   function showLoader(on) {
-  //     const overlay = $("#loaderOverlay");
-  //     if (!overlay) return;
-  //     overlay.style.display = on ? "flex" : "none";
-  //   }
-
-  //   function findBestVideoUrl(outputs) {
-  //     if (!outputs) return null;
-  //     // priorytetyzuj 16:9 → 1:1 → 9:16 → pierwszy mp4_*
-  //     const order = ["mp4_16x9", "mp4_1x1", "mp4_9x16"];
-  //     for (const k of order) if (outputs[k]) return outputs[k];
-  //     for (const k of Object.keys(outputs)) {
-  //       if (k.startsWith("mp4_") && outputs[k]) return outputs[k];
-  //     }
-  //     return null;
-  //   }
-
-  //   function videoHTML(src) {
-  //     // responsywne wideo w modalu
-  //     return `
-  //       <div class="video-wrap" style="position:relative;width:100%;max-width:900px;margin:0 auto;">
-  //         <video src="${src}" controls autoplay style="width:100%;height:auto;border-radius:12px;"></video>
-  //       </div>
-  //     `;
-  //   }
-
-  //   async function startRender(manifest) {
-  //     // POST do API renderu
-  //     console.log("fetch('/news-to-video/api/render') 2 \nasync function startRender");
-  //     const res = await fetch("/news-to-video/api/render", {
-  //       method: "POST",
-  //       headers: {"Content-Type": "application/json"},
-  //       body: JSON.stringify(manifest || {})
-  //     });
-  //     if (!res.ok) throw new Error("Render HTTP " + res.status);
-  //     const data = await res.json();
-  //     // spróbuj kilku możliwych pól identyfikatora
-  //     const pid = data.pid || data.project_id || data.id || data.project || null;
-  //     if (!pid) throw new Error("Brak identyfikatora zadania renderu (pid).");
-  //     return { pid, data };
-  //   }
-
-  //   async function pollUntilDone(pid, {interval=2000, timeout=15*60*1000} = {}) {
-  //     const t0 = Date.now();
-  //     while (true) {
-  //       const res = await fetch(`/news-to-video/api/status/${encodeURIComponent(pid)}?t=${Date.now()}`, {cache:'no-store'});
-  //       if (!res.ok) throw new Error("Status HTTP " + res.status);
-  //       const st = await res.json();
-
-  //       const status = (st.status || "unknown").toLowerCase();
-  //       // opcjonalnie: aktualizuj jakiś badge, pasek postępu itp.
-  //       // setBadge && setBadge(status);
-
-  //       if (status === "done" || status === "completed" || status === "complete") {
-  //         return st; // zawiera outputs
-  //       }
-  //       if (status === "failed" || status === "error") {
-  //         const msg = st.message || st.error || "Render zakończony błędem.";
-  //         throw new Error(msg);
-  //       }
-  //       if (Date.now() - t0 > timeout) {
-  //         throw new Error("Przekroczono czas oczekiwania na render.");
-  //       }
-  //       await new Promise(r => setTimeout(r, interval));
-  //       // delikatny backoff
-  //       interval = Math.min(6000, interval + 400);
-  //     }
-  //   }
-
-  //   function showVideoInManifestModal(url) {
-  //     const modal = $("#manifestModal");
-  //     if (!modal) return;
-  //     const body = modal.querySelector(".modal-body") || modal; // dopasuj do swojej struktury
-  //     body.innerHTML = videoHTML(url);
-  //   }
-
-  //   // === GŁÓWNY HANDLER PRZYCISKU POTWIERDZENIA MANIFESTU ===
-  //   async function onManifestConfirmClick(ev) {
-  //     try {
-  //       ev.preventDefault();
-
-  //       // 1) pokaż loader
-  //       showLoader(true);
-
-  //       // 2) zbierz manifest z Twojej logiki (przykład: z globalnej zmiennej lub funkcji)
-  //       //    Jeśli już wcześniej pokazywałeś „podgląd manifestu” w modalu, użyj tej samej struktury.
-  //       const manifest = window.__lastManifestPreview__ || {};
-
-  //       // 3) odpal render
-  //       const { pid } = await startRender(manifest);
-
-  //       // 4) polluj status
-  //       const done = await pollUntilDone(pid);
-
-  //       // 5) znajdź najlepszy mp4 i wstaw do modala
-  //       const best = findBestVideoUrl(done.outputs || {});
-  //       if (!best) throw new Error("Render zakończony, ale nie znaleziono URL wideo w outputs.");
-
-  //       showVideoInManifestModal(best);
-
-  //     } catch (err) {
-  //       console.error(err);
-  //       // pokaż błąd w modalu (zamiast zostawiać loader)
-  //       const modal = $("#manifestModal");
-  //       if (modal) {
-  //         const body = modal.querySelector(".modal-body") || modal;
-  //         body.innerHTML = `
-  //           <div class="error" style="color:#b00020">
-  //             <p><strong>Błąd:</strong> ${String(err.message || err)}</p>
-  //             <p>Sprawdź logi serwera lub spróbuj ponownie.</p>
-  //           </div>
-  //         `;
-  //       }
-  //     } finally {
-  //       // 6) ukryj loader (wideo już jest w modalu)
-  //       showLoader(false);
-  //     }
-  //   }
-
-  //   // podpięcie zdarzenia
-  //   document.addEventListener("click", (e) => {
-  //     const btn = e.target.closest("#manifestConfirmBtn");
-  //     if (btn) onManifestConfirmClick(e);
-  //   });
-
-  // })();
-  </script>
-  
-
-  <script>
-    /* =========================
-    Ustawienia selektorów
-    ========================= */
-    const SEL = {
-    // przycisk sprawdzenia wymagań (jeśli nie masz – zostaw, kod zadziała bez niego)
-    checkBtn: '#checkRequiredBtn',
-    // przycisk renderowania
-    renderBtn: '#renderBtn',
-    // pola, w których MOŻE znajdować się manifest (wspieramy oba warianty)
-    manifestTextareas: ['#manifest_json', '#payload'],
-    // miejsce na statusy
-    status: '#formStatus',
-    // podgląd
-    preview: '#manifestPreview',
-    // checkbox mapowania duration
-    mapDuration: '#mapDuration'
-    };
-
-    // const $ = (s)=>document.querySelector(s);
-
-    /* =========================
-    Helpery UI
-    ========================= */
-    function setStatus(msg, kind='info'){
-    const el = $(SEL.status);
-    if (!el) return;
-    const colors = { ok:'#1fbf75', error:'#ff5a5a', warn:'#ffb84a', info:'#9fb0c3' };
-    el.innerHTML = `<span style="color:${colors[kind]||colors.info}">${msg}</span>`;
-    }
-
-    function prettyJSON(obj){
-    try { return JSON.stringify(obj, null, 2); } catch { return ''; }
-    }
-
-    /* =========================
-    Wejście/wyjście manifestu
-    ========================= */
-    function findManifestElement(){
-    for (const sel of SEL.manifestTextareas){
-        const el = $(sel);
-        if (el) return el;
-    }
-    return null;
-    }
-
-    function readManifestFromDOM(){
-    const el = findManifestElement();
-    if (!el) return null;
-    const raw = (el.value || el.textContent || '').trim();
-    if (!raw) return null;
-    try {
-        return JSON.parse(raw);
-    } catch {
-        // jeżeli ktoś trzyma już JS-obiekt w window.manifest — weźmy to jako fallback
-        if (window.manifest && typeof window.manifest === 'object') return window.manifest;
-        return null;
-    }
-    }
-
-    function writeManifestToDOM(manifest){
-    const el = findManifestElement();
-    if (!el) return;
-    const formatted = prettyJSON(manifest);
-    if ('value' in el) el.value = formatted; else el.textContent = formatted;
-    const pv = $(SEL.preview);
-    if (pv) pv.textContent = formatted || '{}';
-    }
-
-    /* =========================
-    Walidacja + Sanityzacja
-    ========================= */
-    function validateShotstackManifest(manifest){
-    const errs = [];
-    if (!manifest || typeof manifest !== 'object'){
-        errs.push('Manifest jest pusty lub nie jest obiektem.');
-        return errs;
-    }
-    if (!manifest.timeline) errs.push('Brak pola "timeline".');
-    if (!manifest.output) errs.push('Brak pola "output".');
-
-    const tracks = manifest.timeline?.tracks || [];
-    tracks.forEach((t, ti)=>{
-        (t.clips || []).forEach((c, ci)=>{
-        if (c.transition && 'duration' in c.transition){
-            errs.push(`timeline.tracks[${ti}].clips[${ci}].transition.duration — niedozwolone pole (Shotstack).`);
-        }
-        });
-    });
-    return errs;
-    }
-
-    /** usuwa transition.duration i (opcjonalnie) mapuje fade → fadeSlow/fadeFast wg progu */
-    function sanitizeTransitions(manifest, opts={ mapDuration:false }){
-    if (!manifest || !manifest.timeline) return manifest;
-    const tracks = manifest.timeline.tracks || [];
-    tracks.forEach((t, ti)=>{
-        (t.clips || []).forEach((c, ci)=>{
-        const tr = c.transition;
-        if (tr && typeof tr === 'object' && 'duration' in tr){
-            const dur = tr.duration;
-            delete tr.duration;
-            if (opts.mapDuration && (tr.in || tr.out)){
-            ['in','out'].forEach(k=>{
-                if (!tr[k]) return;
-                const name = String(tr[k]).toLowerCase();
-                if (name === 'fade' && typeof dur === 'number'){
-                if (dur >= 0.9) tr[k] = 'fadeSlow';
-                else if (dur <= 0.35) tr[k] = 'fadeFast';
-                }
-            });
-            }
-            console.debug(`[sanitizeTransitions] removed duration at tracks[${ti}].clips[${ci}].transition`);
-        }
-        });
-    });
-    return manifest;
-    }
-
-    /* =========================
-    Integracja z istniejącym flow
-    ========================= */
-
-    /** 1) Hook do „Sprawdź wymagane pola” (jeśli masz taki przycisk) */
-    const checkBtn = $(SEL.checkBtn);
-    if (checkBtn){
-      checkBtn.addEventListener('click', (ev)=>{
-        try{
-        // 1. odczytaj manifest (z textarea albo z window.manifest)
-        let manifest = readManifestFromDOM();
-
-        // jeżeli nie ma – spróbuj złożyć go z formularza, jeśli w projekcie masz funkcję buildera:
-        if (!manifest && typeof window.buildManifestFromForm === 'function'){
-            manifest = window.buildManifestFromForm();
-        }
-
-        if (!manifest){
-            setStatus('Brak manifestu — wprowadź dane i spróbuj ponownie.', 'warn');
-            return;
-        }
-
-        // 2. walidacja pre
-        const errsBefore = validateShotstackManifest(manifest);
-
-        // 3. sanityzacja (opcjonalne mapowanie fadeSlow/fadeFast)
-        const mapDur = $(SEL.mapDuration)?.checked ?? true;
-        const beforeStr = JSON.stringify(manifest);
-        manifest = sanitizeTransitions(manifest, { mapDuration: !!mapDur });
-        const afterStr = JSON.stringify(manifest);
-
-        // 4. walidacja post
-        const errsAfter = validateShotstackManifest(manifest);
-
-        // 5. zapis + podgląd
-        if (beforeStr !== afterStr){
-            writeManifestToDOM(manifest);
-            setStatus('Automatycznie usunięto niedozwolone pola transition.duration (i zmapowano fade na slow/fast).', 'ok');
-        } else {
-            setStatus('Manifest wygląda poprawnie (brak zmian).', 'info');
-        }
-
-        if (errsAfter.length){
-            setStatus('Ostrzeżenia: \n• ' + errsAfter.join('\n• '), 'warn');
-        }
-
-        const pv = $(SEL.preview);
-        if (pv) pv.textContent = prettyJSON(manifest);
-        }catch(e){
-        setStatus('Wyjątek podczas sprawdzania: ' + (e.message||e), 'error');
-        }
-    });
-    }
-
-    
-    /** 2) Hook do „Renderuj” */
-    const renderBtn = $(SEL.renderBtn);
-    if (renderBtn){
-      renderBtn.addEventListener('click', async (ev)=>{
-        try{
-        renderBtn.setAttribute('disabled', 'disabled');
-
-        // 1. odczyt/ew. zbudowanie manifestu
-        let manifest = readManifestFromDOM();
-        if (!manifest && typeof window.buildManifestFromForm === 'function'){
-            manifest = window.buildManifestFromForm();
-        }
-        if (!manifest){
-            setStatus('Nie mogę odczytać manifestu — uzupełnij formularz.', 'error');
-            renderBtn.removeAttribute('disabled');
-            return;
-        }
-
-        // 2. sanityzacja + końcowa walidacja
-        const mapDur = $(SEL.mapDuration)?.checked ?? true;
-        manifest = sanitizeTransitions(manifest, { mapDuration: !!mapDur });
-        const errs = validateShotstackManifest(manifest);
-        if (errs.length){
-            setStatus('Manifest zawiera błędy:\n• ' + errs.join('\n• '), 'error');
-            renderBtn.removeAttribute('disabled');
-            return;
-        }
-
-        // 3. zapisz z powrotem (żeby backend/preview widziały poprawioną wersję)
-        writeManifestToDOM(manifest);
-
-        // 4. wyślij do backendu (trzymamy się Twojej istniejącej ścieżki /api/render)
-        console.log("fetch('/news-to-video/api/render') 3");
-        const res = await fetch('/news-to-video/api/render', {
-            method: 'POST',
-            headers: { 'Content-Type':'application/json', 'Accept':'application/json' },
-            body: JSON.stringify({
-            // Uwaga: jeśli Twój backend nie przyjmuje „manifest” jako całości,
-            // rozbij tu na wymagane pola (np. timeline/output/profile)
-            manifest
-            })
-        });
-
-        const data = await res.json().catch(()=>({}));
-        if (!res.ok || data.ok === false){
-            setStatus('Błąd podczas zlecania renderu: ' + (data.error || res.status), 'error');
-            renderBtn.removeAttribute('disabled');
-            return;
-        }
-
-        setStatus('Zlecono render. Id: ' + (data.project || data.job_id || '—'), 'ok');
-
-        // (opcjonalnie) tutaj odpal swój poller statusu
-        // startPollingStatus(data.project ?? data.job_id);
-
-        }catch(e){
-        setStatus('Wyjątek podczas renderowania: ' + (e.message||e), 'error');
-        renderBtn.removeAttribute('disabled');
-        }
-    });
-    }
-
-
-    // Hook do istniejącej logiki ładowania pól
-    const xfadeSelect = document.querySelector('select[name="xfade_transition"]');
-    const transitionsByBackend = {
-      // Konserwatywny zestaw, zgodny z komunikatem o dopuszczalnych wartościach
-      shotstack: [
-        'none','fade','fadeSlow','fadeFast','reveal','revealSlow','revealFast',
-        'wipeLeft','wipeLeftSlow','wipeLeftFast','wipeRight','wipeRightSlow','wipeRightFast',
-        'slideLeft','slideLeftSlow','slideLeftFast','slideRight','slideRightSlow','slideRightFast',
-        'slideUp','slideUpSlow','slideUpFast','slideDown','slideDownSlow','slideDownFast',
-        'carouselLeft','carouselLeftSlow','carouselLeftFast','carouselRight','carouselRightSlow','carouselRightFast',
-        'carouselUp','carouselUpSlow','carouselUpFast','carouselDown','carouselDownSlow','carouselDownFast',
-        'shuffleTopRight','shuffleTopRightSlow','shuffleTopRightFast',
-        'shuffleRightTop','shuffleRightTopSlow','shuffleRightTopFast',
-        'shuffleRightBottom','shuffleRightBottomSlow','shuffleRightBottomFast',
-        'shuffleBottomRight','shuffleBottomRightSlow','shuffleBottomRightFast',
-        'shuffleBottomLeft','shuffleBottomLeftSlow','shuffleBottomLeftFast'
-      ],
-      local: ['fade','smoothleft','wipeleft','squeezeh'], // Twoje dotychczasowe, lokalne
-      default: ['fade'] // fallback
-    };
-    function setTransitionsForBackend(backend) {
-      if (!xfadeSelect) return;
-      const list = transitionsByBackend[backend] || transitionsByBackend.default;
-      const current = xfadeSelect.value;
-      xfadeSelect.innerHTML = '';
-      list.forEach(name => {
-        const opt = document.createElement('option');
-        opt.value = name; opt.textContent = name;
-        xfadeSelect.appendChild(opt);
-      });
-      // zachowaj poprzedni wybór jeśli jest dostępny, inaczej ustaw 'fade' lub pierwszy
-      if (list.includes(current)) xfadeSelect.value = current;
-      else if (list.includes('fade')) xfadeSelect.value = 'fade';
-    }
-    const rendererSel3 = document.getElementById('renderer_type');
-    if (rendererSel3) {
-      rendererSel3.addEventListener('change', e => {
-        const backend = e.target.value;
-        setTransitionsForBackend(backend === 'shotstack' ? 'shotstack' : (backend === 'local' ? 'local' : 'shotstack'));
-        // uwaga: dla zdalnych backendów trzymamy bezpieczną listę shotstack, żeby nie wpaść na niewspierane
-      });
-      // init
-      const initBackend = rendererSel3.value;
-      setTransitionsForBackend(initBackend === 'shotstack' ? 'shotstack' : (initBackend === 'local' ? 'local' : 'shotstack'));
-    }
-
-
-  </script>
-
-  <script>
-    function collectAllFormFields(formEl){
-      const out = {};
-      if (!formEl) return out;
-
-      const els = formEl.querySelectorAll('input, select, textarea');
-      els.forEach(el => {
-        // Pomijamy przyciski
-        if (el.type === 'button' || el.type === 'submit' || el.type === 'reset') return;
-
-        const key = (el.name || el.id || '').trim();
-        if (!key) return; // brak identyfikatora
-
-        // CHECKBOX
-        if (el.type === 'checkbox') {
-          // Zbierz wiele checkboxów pod jedną nazwą jako tablicę true/values,
-          // ale jeśli checkboxy nie mają sensownej wartości – zwróć boolean.
-          const val = (el.value && el.value !== 'on') ? el.value : true;
-          if (el.checked) {
-            if (out[key] === undefined) out[key] = [];
-            if (!Array.isArray(out[key])) out[key] = [out[key]];
-            out[key].push(val);
-          } else {
-            // jeśli nic nie zaznaczonego nie ma, ustaw false, ale tylko gdy jeszcze nie ma wartości
-            if (out[key] === undefined) out[key] = false;
-          }
-          return;
-        }
-
-        // RADIO
-        if (el.type === 'radio') {
-          if (el.checked) out[key] = el.value;
-          else if (out[key] === undefined) out[key] = null; // pokaż, że istnieje grupa, ale brak wyboru
-          return;
-        }
-
-        // POZOSTAŁE
-        out[key] = el.value;
-      });
-
-      // Uporządkuj: jeśli jakiś checkbox miał tylko jedną wartość w tablicy – spłaszcz
-      Object.keys(out).forEach(k => {
-        if (Array.isArray(out[k]) && out[k].length === 1) out[k] = out[k][0];
-      });
-
-      return out;
-    }
-
-    function pretty(obj){ try { return JSON.stringify(obj, null, 2); } catch { return ''; } }
-
-  </script>
-
-{% endblock %}
